@@ -1,0 +1,38 @@
+{
+  "assistente": {
+    "nome": "Assistente Curupy",
+    "versao": "1.0.0",
+    "idioma": "pt-BR"
+  },
+
+  "empresa": {
+    "nome": "Curupy Acqua Park",
+    "site": "https://curupy.com.br",
+    "instagram": "https://instagram.com/curupyacquapark",
+    "facebook": "https://facebook.com/CurupyAcquaParkHotel",
+    "whatsapp": "556630151337"
+  },
+
+  "chat": {
+    "mensagemInicial": "Olá! 👋\nSou o Assistente Curupy.\nPosso ajudar com informações sobre ingressos, funcionamento, hospedagem, atrações e muito mais.",
+
+    "tempoDigitando": {
+      "minimo": 600,
+      "maximo": 1200
+    },
+
+    "limiteHistorico": 20,
+
+    "mostrarHorario": true,
+
+    "mostrarDigitando": true
+  },
+
+  "fallback": {
+    "mensagem": "Ainda não encontrei essa informação 😅\nVocê pode tentar outra pergunta ou falar diretamente com nossa equipe pelo WhatsApp."
+  },
+
+  "protecao": {
+    "permitirAssuntosExternos": false
+  }
+}
