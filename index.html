@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#087faf"
+  >
+
+  <meta
+    name="description"
+    content="Assistente Virtual do Curupy Acqua Park"
+  >
+
+  <title>Assistente Curupy</title>
+
+
+  <!-- Fonte -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- CSS -->
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+</head>
+
+
+<body>
+
+
+  <!--
+    Conteúdo temporário da página.
+    Depois o chat será inserido na página oficial.
+  -->
+
+  <main class="pagina-teste">
+
+    <div class="pagina-teste__conteudo">
+
+      <span class="pagina-teste__etiqueta">
+        Curupy Acqua Park
+      </span>
+
+      <h1>
+        Assistente Curupy
+      </h1>
+
+      <p>
+        Atendimento virtual para visitantes.
+      </p>
+
+      <button
+        class="botao-teste"
+        id="abrirChatTeste"
+        type="button"
+      >
+        Testar assistente
+      </button>
+
+    </div>
+
+  </main>
+
+
+
+  <!-- =====================================================
+       BOTÃO FLUTUANTE
+       ===================================================== -->
+
+  <button
+    class="chat-botao-flutuante"
+    id="chatBotaoFlutuante"
+    type="button"
+    aria-label="Abrir Assistente Curupy"
+    aria-expanded="false"
+  >
+
+    <span
+      class="chat-botao-flutuante__icone"
+      aria-hidden="true"
+    >
+      💬
+    </span>
+
+    <span class="chat-botao-flutuante__texto">
+      Precisa de ajuda?
+    </span>
+
+    <span
+      class="chat-botao-flutuante__status"
+      aria-hidden="true"
+    ></span>
+
+  </button>
+
+
+
+  <!-- =====================================================
+       JANELA DO CHAT
+       ===================================================== -->
+
+  <section
+    class="chat"
+    id="chat"
+    role="dialog"
+    aria-label="Assistente Curupy"
+    aria-hidden="true"
+  >
+
+
+    <!-- Cabeçalho -->
+
+    <header class="chat__cabecalho">
+
+      <div
+        class="chat__avatar"
+        aria-hidden="true"
+      >
+        C
+      </div>
+
+
+      <div class="chat__informacoes">
+
+        <strong>
+          Assistente Curupy
+        </strong>
+
+        <span>
+
+          <i aria-hidden="true"></i>
+
+          Atendimento virtual
+
+        </span>
+
+      </div>
+
+
+      <button
+        class="chat__botao-cabecalho"
+        id="reiniciarChat"
+        type="button"
+        aria-label="Reiniciar conversa"
+      >
+        ↻
+      </button>
+
+
+      <button
+        class="chat__botao-cabecalho"
+        id="fecharChat"
+        type="button"
+        aria-label="Fechar assistente"
+      >
+        ×
+      </button>
+
+    </header>
+
+
+
+    <!-- Área das mensagens -->
+
+    <div
+      class="chat__mensagens"
+      id="chatMensagens"
+      aria-live="polite"
+    >
+
+      <!--
+        As mensagens serão inseridas
+        aqui pelo JavaScript.
+      -->
+
+    </div>
+
+
+
+    <!-- Respostas rápidas -->
+
+    <div
+      class="chat__respostas-rapidas"
+      id="chatRespostasRapidas"
+      aria-label="Sugestões de resposta"
+    >
+
+      <!--
+        Os botões serão inseridos
+        aqui pelo JavaScript.
+      -->
+
+    </div>
+
+
+
+    <!-- Campo de mensagem -->
+
+    <form
+      class="chat__formulario"
+      id="chatFormulario"
+    >
+
+      <label
+        class="somente-leitor"
+        for="chatCampo"
+      >
+        Digite sua dúvida
+      </label>
+
+
+      <input
+        id="chatCampo"
+        name="mensagem"
+        type="text"
+        placeholder="Digite sua dúvida..."
+        autocomplete="off"
+        maxlength="240"
+      >
+
+
+      <button
+        type="submit"
+        aria-label="Enviar mensagem"
+      >
+        ➤
+      </button>
+
+    </form>
+
+
+
+    <!-- Rodapé -->
+
+    <footer class="chat__rodape">
+
+      Assistente automático · Informações sujeitas a atualização
+
+    </footer>
+
+  </section>
+
+
+
+  <!-- JavaScript -->
+
+  <script src="script.js"></script>
+
+
+</body>
+
+</html>
