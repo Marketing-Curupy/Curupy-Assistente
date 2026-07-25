@@ -17,10 +17,10 @@
 
   <meta
     name="description"
-    content="Assistente Virtual do Curupy Acqua Park"
+    content="Acqua, assistente virtual do Curupy Acqua Park."
   >
 
-  <title>Assistente Curupy</title>
+  <title>Acqua | Assistente Curupy</title>
 
 
   <!-- Fonte -->
@@ -55,10 +55,9 @@
 <body>
 
 
-  <!--
-    Conteúdo temporário da página.
-    Depois o chat será inserido na página oficial.
-  -->
+  <!-- =====================================================
+       CONTEÚDO TEMPORÁRIO DA PÁGINA
+       ===================================================== -->
 
   <main class="pagina-teste">
 
@@ -69,11 +68,11 @@
       </span>
 
       <h1>
-        Assistente Curupy
+        Conheça o Acqua
       </h1>
 
       <p>
-        Atendimento virtual para visitantes.
+        O assistente virtual do Curupy.
       </p>
 
       <button
@@ -98,8 +97,9 @@
     class="chat-botao-flutuante"
     id="chatBotaoFlutuante"
     type="button"
-    aria-label="Abrir Assistente Curupy"
+    aria-label="Abrir o assistente virtual Acqua"
     aria-expanded="false"
+    aria-controls="chat"
   >
 
     <span
@@ -130,7 +130,8 @@
     class="chat"
     id="chat"
     role="dialog"
-    aria-label="Assistente Curupy"
+    aria-modal="false"
+    aria-labelledby="chatTitulo"
     aria-hidden="true"
   >
 
@@ -143,21 +144,23 @@
         class="chat__avatar"
         aria-hidden="true"
       >
-        C
+        A
       </div>
 
 
       <div class="chat__informacoes">
 
-        <strong>
-          Assistente Curupy
+        <strong id="chatTitulo">
+          Acqua
         </strong>
 
-        <span>
+        <span id="chatStatus">
 
           <i aria-hidden="true"></i>
 
-          Atendimento virtual
+          <span id="chatStatusTexto">
+            Carregando informações...
+          </span>
 
         </span>
 
@@ -169,6 +172,7 @@
         id="reiniciarChat"
         type="button"
         aria-label="Reiniciar conversa"
+        title="Reiniciar conversa"
       >
         ↻
       </button>
@@ -179,11 +183,34 @@
         id="fecharChat"
         type="button"
         aria-label="Fechar assistente"
+        title="Fechar assistente"
       >
         ×
       </button>
 
     </header>
+
+
+
+    <!-- Estado de carregamento -->
+
+    <div
+      class="chat__carregamento"
+      id="chatCarregamento"
+      role="status"
+      aria-live="polite"
+    >
+
+      <span
+        class="chat__carregamento-icone"
+        aria-hidden="true"
+      ></span>
+
+      <span id="chatCarregamentoTexto">
+        Preparando o atendimento...
+      </span>
+
+    </div>
 
 
 
@@ -193,14 +220,9 @@
       class="chat__mensagens"
       id="chatMensagens"
       aria-live="polite"
-    >
-
-      <!--
-        As mensagens serão inseridas
-        aqui pelo JavaScript.
-      -->
-
-    </div>
+      aria-relevant="additions"
+      aria-label="Conversa com o Acqua"
+    ></div>
 
 
 
@@ -210,12 +232,33 @@
       class="chat__respostas-rapidas"
       id="chatRespostasRapidas"
       aria-label="Sugestões de resposta"
+    ></div>
+
+
+
+    <!-- Mensagem de erro -->
+
+    <div
+      class="chat__erro"
+      id="chatErro"
+      role="alert"
+      hidden
     >
 
-      <!--
-        Os botões serão inseridos
-        aqui pelo JavaScript.
-      -->
+      <strong>
+        Não foi possível iniciar o atendimento.
+      </strong>
+
+      <span id="chatErroTexto">
+        Tente atualizar a página ou fale com nossa equipe.
+      </span>
+
+      <button
+        id="tentarNovamente"
+        type="button"
+      >
+        Tentar novamente
+      </button>
 
     </div>
 
@@ -226,13 +269,14 @@
     <form
       class="chat__formulario"
       id="chatFormulario"
+      autocomplete="off"
     >
 
       <label
         class="somente-leitor"
         for="chatCampo"
       >
-        Digite sua dúvida
+        Digite sua mensagem
       </label>
 
 
@@ -240,15 +284,27 @@
         id="chatCampo"
         name="mensagem"
         type="text"
-        placeholder="Digite sua dúvida..."
+        placeholder="Aguarde..."
         autocomplete="off"
         maxlength="240"
+        disabled
+        aria-describedby="chatCampoAjuda"
       >
 
 
+      <span
+        class="somente-leitor"
+        id="chatCampoAjuda"
+      >
+        Digite uma pergunta ou responda ao Acqua.
+      </span>
+
+
       <button
+        id="chatEnviar"
         type="submit"
         aria-label="Enviar mensagem"
+        disabled
       >
         ➤
       </button>
@@ -269,9 +325,28 @@
 
 
 
-  <!-- JavaScript -->
+  <!-- Aviso para navegador sem JavaScript -->
 
-  <script src="script.js"></script>
+  <noscript>
+
+    <div class="aviso-sem-script">
+
+      Para utilizar o Acqua, ative o JavaScript no seu navegador.
+
+    </div>
+
+  </noscript>
+
+
+
+  <!-- =====================================================
+       JAVASCRIPT
+       ===================================================== -->
+
+  <script
+    type="module"
+    src="js/main.js"
+  ></script>
 
 
 </body>
