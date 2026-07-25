@@ -33,14 +33,32 @@ export async function carregarBaseConhecimento() {
             );
         }
 
-        const dados =
+        const respostaApi =
             await lerRespostaJson(
                 resposta
             );
 
+        if (respostaApi.ok === false) {
+            throw new Error(
+                respostaApi.erro ||
+                "A planilha retornou um erro."
+            );
+        }
+
+        if (
+            !respostaApi.dados ||
+            !objetoValido(
+                respostaApi.dados
+            )
+        ) {
+            throw new Error(
+                "A API não retornou a base de conhecimento."
+            );
+        }
+
         const baseNormalizada =
             normalizarBaseConhecimento(
-                dados
+                respostaApi.dados
             );
 
         salvarCache(
