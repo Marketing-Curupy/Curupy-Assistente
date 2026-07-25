@@ -10,7 +10,7 @@ export const CONFIG = {
        ===================================================== */
 
     apiUrl:
-        "https://script.google.com/macros/s/AKfycbzIZOlrc_7e-ReVRsIBRukTE0P5bwoxIKXckOi6zsc6I3PtdXhG87Oz0iKVfJnnGZ46Bw/exec",
+        "https://script.google.com/macros/s/AKfycbybLIp5yXVxlzeE0n41WHXxKgpHtfx0UNh3LCb1Ew0tCKZTbNa3jpMbGldPvAXV68jC/exec",
 
     tempoLimiteApi: 10000,
 
