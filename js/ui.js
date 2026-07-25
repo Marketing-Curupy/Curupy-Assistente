@@ -3,9 +3,37 @@
    INTERFACE DO CHAT
    ========================================================= */
 
-const elementos = {};
+import {
+    limparTexto,
+    scrollFinal
+} from "./utils.js";
+
+
+/* =========================================================
+   ELEMENTOS DA INTERFACE
+   ========================================================= */
+
+const elementos = {
+    chat: null,
+
+    mensagens: null,
+
+    respostas: null,
+
+    formulario: null,
+
+    campo: null,
+
+    carregamento: null,
+
+    erro: null,
+
+    botaoEnviar: null
+};
 
 let digitandoAtual = null;
+
+let uiIniciada = false;
 
 
 /* =========================================================
@@ -13,33 +41,53 @@ let digitandoAtual = null;
    ========================================================= */
 
 export function iniciarUI() {
-  elementos.chat =
-    document.getElementById("chat");
+    elementos.chat =
+        document.getElementById(
+            "chat"
+        );
 
-  elementos.mensagens =
-    document.getElementById("chatMensagens");
+    elementos.mensagens =
+        document.getElementById(
+            "chatMensagens"
+        );
 
-  elementos.respostas =
-    document.getElementById("chatRespostasRapidas");
+    elementos.respostas =
+        document.getElementById(
+            "chatRespostasRapidas"
+        );
 
-  elementos.formulario =
-    document.getElementById("chatFormulario");
+    elementos.formulario =
+        document.getElementById(
+            "chatFormulario"
+        );
 
-  elementos.campo =
-    document.getElementById("chatCampo");
+    elementos.campo =
+        document.getElementById(
+            "chatCampo"
+        );
 
-  elementos.carregamento =
-    document.getElementById("chatCarregamento");
+    elementos.carregamento =
+        document.getElementById(
+            "chatCarregamento"
+        );
 
-  elementos.erro =
-    document.getElementById("chatErro");
+    elementos.erro =
+        document.getElementById(
+            "chatErro"
+        );
 
-  elementos.botaoEnviar =
-    elementos.formulario?.querySelector(
-      "button[type='submit']"
-    );
+    elementos.botaoEnviar =
+        elementos.formulario
+            ?.querySelector(
+                "button[type='submit']"
+            ) || null;
 
-  validarElementos();
+    uiIniciada =
+        validarElementos();
+
+    configurarAcessibilidade();
+
+    return uiIniciada;
 }
 
 
@@ -48,23 +96,75 @@ export function iniciarUI() {
    ========================================================= */
 
 function validarElementos() {
-  const obrigatorios = [
-    elementos.chat,
-    elementos.mensagens,
-    elementos.respostas,
-    elementos.formulario,
-    elementos.campo,
-    elementos.botaoEnviar
-  ];
+    const obrigatorios = {
+        chat:
+            elementos.chat,
 
-  const possuiElementoAusente =
-    obrigatorios.some(elemento => !elemento);
+        mensagens:
+            elementos.mensagens,
 
-  if (possuiElementoAusente) {
-    console.error(
-      "Acqua: alguns elementos obrigatórios não foram encontrados no HTML."
+        respostas:
+            elementos.respostas,
+
+        formulario:
+            elementos.formulario,
+
+        campo:
+            elementos.campo,
+
+        botaoEnviar:
+            elementos.botaoEnviar
+    };
+
+    const ausentes =
+        Object.entries(obrigatorios)
+            .filter(([, elemento]) => {
+                return !elemento;
+            })
+            .map(([nome]) => nome);
+
+    if (ausentes.length > 0) {
+        console.error(
+            "Acqua: elementos obrigatórios não encontrados no HTML:",
+            ausentes
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+
+/* =========================================================
+   ACESSIBILIDADE
+   ========================================================= */
+
+function configurarAcessibilidade() {
+    elementos.mensagens?.setAttribute(
+        "aria-live",
+        "polite"
     );
-  }
+
+    elementos.mensagens?.setAttribute(
+        "aria-relevant",
+        "additions"
+    );
+
+    elementos.respostas?.setAttribute(
+        "aria-label",
+        "Sugestões de resposta"
+    );
+
+    elementos.carregamento?.setAttribute(
+        "aria-live",
+        "polite"
+    );
+
+    elementos.erro?.setAttribute(
+        "aria-live",
+        "assertive"
+    );
 }
 
 
@@ -73,19 +173,32 @@ function validarElementos() {
    ========================================================= */
 
 export function mostrarCarregando() {
-  if (!elementos.carregamento) {
-    return;
-  }
+    if (!elementos.carregamento) {
+        return;
+    }
 
-  elementos.carregamento.hidden = false;
+    elementos.carregamento.hidden =
+        false;
+
+    elementos.carregamento.setAttribute(
+        "aria-hidden",
+        "false"
+    );
 }
 
-export function esconderCarregando() {
-  if (!elementos.carregamento) {
-    return;
-  }
 
-  elementos.carregamento.hidden = true;
+export function esconderCarregando() {
+    if (!elementos.carregamento) {
+        return;
+    }
+
+    elementos.carregamento.hidden =
+        true;
+
+    elementos.carregamento.setAttribute(
+        "aria-hidden",
+        "true"
+    );
 }
 
 
@@ -94,67 +207,122 @@ export function esconderCarregando() {
    ========================================================= */
 
 export function mostrarErro(
-  titulo,
-  mensagem,
-  textoBotao = "",
-  aoClicar = null
+    titulo,
+    mensagem,
+    textoBotao = "",
+    aoClicar = null
 ) {
-  if (!elementos.erro) {
-    return;
-  }
+    if (!elementos.erro) {
+        console.error(
+            titulo || "Erro no atendimento",
+            mensagem || ""
+        );
 
-  elementos.erro.innerHTML = "";
+        return;
+    }
 
-  const tituloElemento =
-    document.createElement("strong");
+    elementos.erro.innerHTML = "";
 
-  tituloElemento.textContent =
-    titulo || "Não foi possível carregar";
+    const tituloElemento =
+        document.createElement(
+            "strong"
+        );
 
-  const mensagemElemento =
-    document.createElement("span");
+    tituloElemento.className =
+        "chat__erro-titulo";
 
-  mensagemElemento.textContent =
-    mensagem || "Tente novamente em alguns instantes.";
+    tituloElemento.textContent =
+        limparTexto(titulo) ||
+        "Não foi possível carregar";
 
-  elementos.erro.appendChild(
-    tituloElemento
-  );
+    const mensagemElemento =
+        document.createElement(
+            "span"
+        );
 
-  elementos.erro.appendChild(
-    mensagemElemento
-  );
+    mensagemElemento.className =
+        "chat__erro-mensagem";
 
-  if (
-    textoBotao &&
-    typeof aoClicar === "function"
-  ) {
-    const botao =
-      document.createElement("button");
+    mensagemElemento.textContent =
+        limparTexto(mensagem) ||
+        "Tente novamente em alguns instantes.";
 
-    botao.type = "button";
-    botao.textContent = textoBotao;
-
-    botao.addEventListener(
-      "click",
-      aoClicar
+    elementos.erro.appendChild(
+        tituloElemento
     );
 
     elementos.erro.appendChild(
-      botao
+        mensagemElemento
     );
-  }
 
-  elementos.erro.hidden = false;
+    if (
+        limparTexto(textoBotao) &&
+        typeof aoClicar === "function"
+    ) {
+        const botao =
+            document.createElement(
+                "button"
+            );
+
+        botao.type =
+            "button";
+
+        botao.className =
+            "chat__erro-botao";
+
+        botao.textContent =
+            limparTexto(textoBotao);
+
+        botao.addEventListener(
+            "click",
+            async () => {
+                botao.disabled =
+                    true;
+
+                try {
+                    await aoClicar();
+                } catch (erro) {
+                    console.error(
+                        "Acqua: erro ao executar nova tentativa.",
+                        erro
+                    );
+                } finally {
+                    botao.disabled =
+                        false;
+                }
+            }
+        );
+
+        elementos.erro.appendChild(
+            botao
+        );
+    }
+
+    elementos.erro.hidden =
+        false;
+
+    elementos.erro.setAttribute(
+        "aria-hidden",
+        "false"
+    );
 }
 
-export function esconderErro() {
-  if (!elementos.erro) {
-    return;
-  }
 
-  elementos.erro.hidden = true;
-  elementos.erro.innerHTML = "";
+export function esconderErro() {
+    if (!elementos.erro) {
+        return;
+    }
+
+    elementos.erro.hidden =
+        true;
+
+    elementos.erro.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+    elementos.erro.innerHTML =
+        "";
 }
 
 
@@ -163,72 +331,105 @@ export function esconderErro() {
    ========================================================= */
 
 export function adicionarMensagemAssistente(
-  texto
+    texto
 ) {
-  adicionarMensagem(
-    texto,
-    "assistente"
-  );
+    return adicionarMensagem(
+        texto,
+        "assistente"
+    );
 }
+
 
 export function adicionarMensagemUsuario(
-  texto
+    texto
 ) {
-  adicionarMensagem(
-    texto,
-    "usuario"
-  );
+    return adicionarMensagem(
+        texto,
+        "usuario"
+    );
 }
 
+
 function adicionarMensagem(
-  texto,
-  tipo
+    texto,
+    tipo
 ) {
-  if (!elementos.mensagens) {
-    return;
-  }
+    if (!elementos.mensagens) {
+        return null;
+    }
 
-  const linha =
-    document.createElement("div");
+    const mensagem =
+        String(texto ?? "");
 
-  linha.className =
-    tipo === "usuario"
-      ? "mensagem-linha mensagem-linha--usuario"
-      : "mensagem-linha";
+    if (!mensagem.trim()) {
+        return null;
+    }
 
-  const balao =
-    document.createElement("div");
+    removerDigitando();
 
-  balao.className =
-    tipo === "usuario"
-      ? "mensagem mensagem--usuario"
-      : "mensagem mensagem--assistente";
+    const linha =
+        document.createElement(
+            "div"
+        );
 
-  const conteudo =
-    document.createElement("div");
+    linha.className =
+        tipo === "usuario"
+            ? "mensagem-linha mensagem-linha--usuario"
+            : "mensagem-linha mensagem-linha--assistente";
 
-  conteudo.innerHTML =
-    converterTexto(texto);
+    const balao =
+        document.createElement(
+            "div"
+        );
 
-  const horario =
-    document.createElement("span");
+    balao.className =
+        tipo === "usuario"
+            ? "mensagem mensagem--usuario"
+            : "mensagem mensagem--assistente";
 
-  horario.className =
-    "mensagem__horario";
+    const conteudo =
+        document.createElement(
+            "div"
+        );
 
-  horario.textContent =
-    horaAtual();
+    conteudo.className =
+        "mensagem__conteudo";
 
-  balao.appendChild(conteudo);
-  balao.appendChild(horario);
+    inserirTextoComQuebras(
+        conteudo,
+        mensagem
+    );
 
-  linha.appendChild(balao);
+    const horario =
+        document.createElement(
+            "span"
+        );
 
-  elementos.mensagens.appendChild(
-    linha
-  );
+    horario.className =
+        "mensagem__horario";
 
-  rolarFinal();
+    horario.textContent =
+        horaAtual();
+
+    balao.appendChild(
+        conteudo
+    );
+
+    balao.appendChild(
+        horario
+    );
+
+    linha.appendChild(
+        balao
+    );
+
+    elementos.mensagens.appendChild(
+        linha
+    );
+
+    rolarFinal();
+
+    return linha;
 }
 
 
@@ -237,47 +438,79 @@ function adicionarMensagem(
    ========================================================= */
 
 export function mostrarDigitando() {
-  if (!elementos.mensagens) {
-    return;
-  }
+    if (!elementos.mensagens) {
+        return;
+    }
 
-  removerDigitando();
+    removerDigitando();
 
-  digitandoAtual =
-    document.createElement("div");
+    digitandoAtual =
+        document.createElement(
+            "div"
+        );
 
-  digitandoAtual.className =
-    "mensagem-linha";
+    digitandoAtual.className =
+        "mensagem-linha mensagem-linha--assistente";
 
-  digitandoAtual.id =
-    "linhaDigitando";
+    digitandoAtual.id =
+        "linhaDigitando";
 
-  digitandoAtual.innerHTML = `
-    <div
-      class="chat__digitando"
-      role="status"
-      aria-label="Acqua está digitando"
-    >
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
-  `;
+    const indicador =
+        document.createElement(
+            "div"
+        );
 
-  elementos.mensagens.appendChild(
-    digitandoAtual
-  );
+    indicador.className =
+        "chat__digitando";
 
-  rolarFinal();
+    indicador.setAttribute(
+        "role",
+        "status"
+    );
+
+    indicador.setAttribute(
+        "aria-label",
+        "Acqua está digitando"
+    );
+
+    indicador.setAttribute(
+        "aria-live",
+        "polite"
+    );
+
+    for (
+        let indice = 0;
+        indice < 3;
+        indice += 1
+    ) {
+        indicador.appendChild(
+            document.createElement(
+                "span"
+            )
+        );
+    }
+
+    digitandoAtual.appendChild(
+        indicador
+    );
+
+    elementos.mensagens.appendChild(
+        digitandoAtual
+    );
+
+    rolarFinal();
 }
 
-export function removerDigitando() {
-  if (!digitandoAtual) {
-    return;
-  }
 
-  digitandoAtual.remove();
-  digitandoAtual = null;
+export function removerDigitando() {
+    if (!digitandoAtual) {
+        return;
+    }
+
+    digitandoAtual.remove();
+
+    digitandoAtual =
+        null;
 }
 
 
@@ -286,67 +519,137 @@ export function removerDigitando() {
    ========================================================= */
 
 export function atualizarSugestoes(
-  sugestoes = [],
-  aoSelecionar = null
+    sugestoes = [],
+    aoSelecionar = null
 ) {
-  limparSugestoes();
+    limparSugestoes();
 
-  if (
-    !elementos.respostas ||
-    !Array.isArray(sugestoes)
-  ) {
-    return;
-  }
+    if (
+        !elementos.respostas ||
+        !Array.isArray(sugestoes)
+    ) {
+        return;
+    }
 
-  sugestoes.forEach(sugestao => {
-    if (!sugestao?.texto) {
-      return;
+    sugestoes.forEach(
+        sugestao => {
+            criarBotaoSugestao(
+                sugestao,
+                aoSelecionar
+            );
+        }
+    );
+
+    rolarFinal();
+}
+
+
+function criarBotaoSugestao(
+    sugestao,
+    aoSelecionar
+) {
+    const texto =
+        limparTexto(
+            sugestao?.texto
+        );
+
+    if (!texto) {
+        return;
     }
 
     const botao =
-      document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
-    botao.type = "button";
+    botao.type =
+        "button";
 
     botao.className =
-      "chat__resposta-rapida";
+        "chat__resposta-rapida";
 
     botao.textContent =
-      sugestao.texto;
+        texto;
+
+    if (sugestao?.link) {
+        botao.setAttribute(
+            "aria-label",
+            `${texto}. Abre em uma nova guia.`
+        );
+    }
 
     botao.addEventListener(
-      "click",
-      () => {
-        if (sugestao.link) {
-          window.open(
-            sugestao.link,
-            "_blank",
-            "noopener,noreferrer"
-          );
+        "click",
+        async () => {
+            if (botao.disabled) {
+                return;
+            }
 
-          return;
+            if (sugestao?.link) {
+                abrirLinkSeguro(
+                    sugestao.link
+                );
+
+                return;
+            }
+
+            const mensagem =
+                limparTexto(
+                    sugestao?.mensagem
+                ) || texto;
+
+            if (
+                typeof aoSelecionar !==
+                "function"
+            ) {
+                return;
+            }
+
+            bloquearSugestoes(
+                true
+            );
+
+            try {
+                await aoSelecionar(
+                    mensagem,
+                    sugestao
+                );
+            } catch (erro) {
+                console.error(
+                    "Acqua: erro ao processar sugestão.",
+                    erro
+                );
+            } finally {
+                bloquearSugestoes(
+                    false
+                );
+            }
         }
-
-        const mensagem =
-          sugestao.mensagem ||
-          sugestao.texto;
-
-        if (
-          typeof aoSelecionar ===
-          "function"
-        ) {
-          aoSelecionar(
-            mensagem,
-            sugestao
-          );
-        }
-      }
     );
 
     elementos.respostas.appendChild(
-      botao
+        botao
     );
-  });
+}
+
+
+function bloquearSugestoes(
+    bloquear
+) {
+    if (!elementos.respostas) {
+        return;
+    }
+
+    const botoes =
+        elementos.respostas
+            .querySelectorAll(
+                "button"
+            );
+
+    botoes.forEach(botao => {
+        botao.disabled =
+            Boolean(bloquear);
+    });
 }
 
 
@@ -355,40 +658,75 @@ export function atualizarSugestoes(
    ========================================================= */
 
 export function bloquearCampo(
-  bloquear
+    bloquear
 ) {
-  if (elementos.campo) {
-    elementos.campo.disabled =
-      bloquear;
-  }
+    const bloqueado =
+        Boolean(bloquear);
 
-  if (elementos.botaoEnviar) {
-    elementos.botaoEnviar.disabled =
-      bloquear;
-  }
+    if (elementos.campo) {
+        elementos.campo.disabled =
+            bloqueado;
+
+        elementos.campo.setAttribute(
+            "aria-disabled",
+            String(bloqueado)
+        );
+    }
+
+    if (elementos.botaoEnviar) {
+        elementos.botaoEnviar.disabled =
+            bloqueado;
+
+        elementos.botaoEnviar.setAttribute(
+            "aria-disabled",
+            String(bloqueado)
+        );
+    }
 }
+
 
 export function limparCampo() {
-  if (!elementos.campo) {
-    return;
-  }
+    if (!elementos.campo) {
+        return;
+    }
 
-  elementos.campo.value = "";
+    elementos.campo.value =
+        "";
 }
+
 
 export function obterValorCampo() {
-  return elementos.campo?.value.trim() || "";
+    return limparTexto(
+        elementos.campo?.value
+    );
 }
 
-export function focarCampo() {
-  if (
-    !elementos.campo ||
-    elementos.campo.disabled
-  ) {
-    return;
-  }
 
-  elementos.campo.focus();
+export function definirValorCampo(
+    valor
+) {
+    if (!elementos.campo) {
+        return;
+    }
+
+    elementos.campo.value =
+        String(valor ?? "");
+}
+
+
+export function focarCampo() {
+    if (
+        !elementos.campo ||
+        elementos.campo.disabled
+    ) {
+        return;
+    }
+
+    requestAnimationFrame(() => {
+        elementos.campo?.focus({
+            preventScroll: true
+        });
+    });
 }
 
 
@@ -397,21 +735,24 @@ export function focarCampo() {
    ========================================================= */
 
 export function limparMensagens() {
-  if (!elementos.mensagens) {
-    return;
-  }
+    if (!elementos.mensagens) {
+        return;
+    }
 
-  removerDigitando();
+    removerDigitando();
 
-  elementos.mensagens.innerHTML = "";
+    elementos.mensagens.innerHTML =
+        "";
 }
 
-export function limparSugestoes() {
-  if (!elementos.respostas) {
-    return;
-  }
 
-  elementos.respostas.innerHTML = "";
+export function limparSugestoes() {
+    if (!elementos.respostas) {
+        return;
+    }
+
+    elementos.respostas.innerHTML =
+        "";
 }
 
 
@@ -420,41 +761,70 @@ export function limparSugestoes() {
    ========================================================= */
 
 export function abrirInterfaceChat() {
-  if (!elementos.chat) {
-    return;
-  }
+    if (!elementos.chat) {
+        return;
+    }
 
-  elementos.chat.classList.add(
-    "chat--aberto"
-  );
+    elementos.chat.classList.add(
+        "chat--aberto"
+    );
 
-  elementos.chat.setAttribute(
-    "aria-hidden",
-    "false"
-  );
+    elementos.chat.setAttribute(
+        "aria-hidden",
+        "false"
+    );
 
-  document.body.classList.add(
-    "chat-aberto"
-  );
+    document.body.classList.add(
+        "chat-aberto"
+    );
+
+    requestAnimationFrame(() => {
+        rolarFinal();
+
+        focarCampo();
+    });
 }
 
+
 export function fecharInterfaceChat() {
-  if (!elementos.chat) {
-    return;
-  }
+    if (!elementos.chat) {
+        return;
+    }
 
-  elementos.chat.classList.remove(
-    "chat--aberto"
-  );
+    elementos.chat.classList.remove(
+        "chat--aberto"
+    );
 
-  elementos.chat.setAttribute(
-    "aria-hidden",
-    "true"
-  );
+    elementos.chat.setAttribute(
+        "aria-hidden",
+        "true"
+    );
 
-  document.body.classList.remove(
-    "chat-aberto"
-  );
+    document.body.classList.remove(
+        "chat-aberto"
+    );
+}
+
+
+/* =========================================================
+   CONSULTAS DA INTERFACE
+   ========================================================= */
+
+export function interfaceFoiIniciada() {
+    return uiIniciada;
+}
+
+
+export function interfaceEstaAberta() {
+    if (!elementos.chat) {
+        return false;
+    }
+
+    return (
+        elementos.chat.getAttribute(
+            "aria-hidden"
+        ) === "false"
+    );
 }
 
 
@@ -463,46 +833,118 @@ export function fecharInterfaceChat() {
    ========================================================= */
 
 export function obterElementosUI() {
-  return {
-    ...elementos
-  };
+    return {
+        ...elementos
+    };
 }
 
 
 /* =========================================================
-   UTILITÁRIOS
+   UTILITÁRIOS INTERNOS
    ========================================================= */
 
 function rolarFinal() {
-  if (!elementos.mensagens) {
-    return;
-  }
+    if (!elementos.mensagens) {
+        return;
+    }
 
-  requestAnimationFrame(() => {
-    elementos.mensagens.scrollTop =
-      elementos.mensagens.scrollHeight;
-  });
+    requestAnimationFrame(() => {
+        scrollFinal(
+            elementos.mensagens,
+            true
+        );
+    });
 }
+
 
 function horaAtual() {
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      hour: "2-digit",
-      minute: "2-digit"
-    }
-  ).format(new Date());
+    return new Intl.DateTimeFormat(
+        "pt-BR",
+        {
+            hour:
+                "2-digit",
+
+            minute:
+                "2-digit"
+        }
+    ).format(
+        new Date()
+    );
 }
 
-function converterTexto(texto) {
-  const div =
-    document.createElement("div");
 
-  div.textContent =
-    String(texto || "");
+function inserirTextoComQuebras(
+    elemento,
+    texto
+) {
+    const linhas =
+        String(texto ?? "")
+            .split(/\r?\n/);
 
-  return div.innerHTML.replace(
-    /\n/g,
-    "<br>"
-  );
+    linhas.forEach(
+        (linha, indice) => {
+            elemento.appendChild(
+                document.createTextNode(
+                    linha
+                )
+            );
+
+            if (
+                indice <
+                linhas.length - 1
+            ) {
+                elemento.appendChild(
+                    document.createElement(
+                        "br"
+                    )
+                );
+            }
+        }
+    );
+}
+
+
+function abrirLinkSeguro(
+    endereco
+) {
+    const link =
+        limparTexto(endereco);
+
+    if (!link) {
+        return;
+    }
+
+    if (
+        !/^(https?:\/\/|mailto:|tel:)/i.test(
+            link
+        )
+    ) {
+        console.warn(
+            "Acqua: link bloqueado por formato inválido.",
+            link
+        );
+
+        return;
+    }
+
+    if (
+        /^(mailto:|tel:)/i.test(link)
+    ) {
+        window.location.href =
+            link;
+
+        return;
+    }
+
+    const novaJanela =
+        window.open(
+            link,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+    if (novaJanela) {
+        novaJanela.opener =
+            null;
+    }
 }
