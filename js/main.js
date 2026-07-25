@@ -3,18 +3,39 @@
    ARQUIVO PRINCIPAL
    ========================================================= */
 
-import { iniciarUI } from "./ui.js";
+import {
+  carregarBaseConhecimento
+} from "./api.js";
 
 import {
-    adicionarMensagem,
-    mostrarMenuPrincipal,
-    processarRespostaRapida,
-    processarMensagemUsuario
+  configurarBaseConhecimento,
+  conversaFoiIniciada,
+  iniciarConversa,
+  processarMensagem,
+  reiniciarConversa
 } from "./chat.js";
 
 import {
-    enviarMensagem
-} from "./api.js";
+  abrirInterfaceChat,
+  bloquearCampo,
+  esconderCarregando,
+  esconderErro,
+  fecharInterfaceChat,
+  iniciarUI,
+  mostrarCarregando,
+  mostrarErro,
+  obterElementosUI,
+  obterValorCampo
+} from "./ui.js";
+
+
+/* =========================================================
+   ESTADO DA APLICAÇÃO
+   ========================================================= */
+
+let aplicacaoPronta = false;
+
+let carregandoBase = false;
 
 
 /* =========================================================
@@ -22,116 +43,306 @@ import {
    ========================================================= */
 
 document.addEventListener(
-    "DOMContentLoaded",
-    iniciarAplicacao
+  "DOMContentLoaded",
+  iniciarAplicacao
 );
 
 
 /* =========================================================
-   APLICAÇÃO
+   INICIAR APLICAÇÃO
    ========================================================= */
 
-function iniciarAplicacao() {
+async function iniciarAplicacao() {
+  iniciarUI();
 
-    iniciarUI();
+  registrarEventos();
 
-    registrarEventos();
+  bloquearCampo(true);
 
-    iniciarChat();
+  mostrarCarregando();
 
+  esconderErro();
+
+  await prepararAtendimento();
 }
 
 
 /* =========================================================
-   CHAT
+   PREPARAR ATENDIMENTO
    ========================================================= */
 
-function iniciarChat() {
+async function prepararAtendimento() {
+  if (carregandoBase) {
+    return;
+  }
 
-    adicionarMensagem(
-        "bot",
-        "Olá! 👋 Seja bem-vindo ao Curupy Acqua Park."
+  carregandoBase = true;
+
+  aplicacaoPronta = false;
+
+  mostrarCarregando();
+
+  esconderErro();
+
+  bloquearCampo(true);
+
+  atualizarStatus(
+    "Carregando informações..."
+  );
+
+  try {
+    const resultado =
+      await carregarBaseConhecimento();
+
+    configurarBaseConhecimento(
+      resultado.dados
     );
 
-    mostrarMenuPrincipal();
+    aplicacaoPronta = true;
 
+    esconderCarregando();
+
+    bloquearCampo(false);
+
+    atualizarStatus(
+      resultado.origem === "cache"
+        ? "Informações salvas disponíveis"
+        : "Online agora"
+    );
+
+    if (chatEstaAberto()) {
+      await garantirConversaIniciada();
+    }
+  } catch (erro) {
+    console.error(
+      "Acqua: falha ao iniciar o atendimento.",
+      erro
+    );
+
+    esconderCarregando();
+
+    bloquearCampo(true);
+
+    atualizarStatus(
+      "Atendimento indisponível"
+    );
+
+    mostrarErro(
+      "Não foi possível iniciar o atendimento.",
+      "Verifique sua conexão com a internet e tente novamente.",
+      "Tentar novamente",
+      prepararAtendimento
+    );
+  } finally {
+    carregandoBase = false;
+  }
 }
 
 
 /* =========================================================
-   EVENTOS
+   REGISTRAR EVENTOS
    ========================================================= */
 
 function registrarEventos() {
+  const elementos =
+    obterElementosUI();
 
-    registrarFormulario();
+  elementos.formulario?.addEventListener(
+    "submit",
+    enviarMensagemDoFormulario
+  );
 
-    registrarRespostasRapidas();
+  document
+    .getElementById(
+      "chatBotaoFlutuante"
+    )
+    ?.addEventListener(
+      "click",
+      abrirChat
+    );
 
+  document
+    .getElementById(
+      "abrirChatTeste"
+    )
+    ?.addEventListener(
+      "click",
+      abrirChat
+    );
+
+  document
+    .getElementById(
+      "fecharChat"
+    )
+    ?.addEventListener(
+      "click",
+      fecharChat
+    );
+
+  document
+    .getElementById(
+      "reiniciarChat"
+    )
+    ?.addEventListener(
+      "click",
+      reiniciarAtendimento
+    );
+
+  document
+    .getElementById(
+      "tentarNovamente"
+    )
+    ?.addEventListener(
+      "click",
+      prepararAtendimento
+    );
 }
 
 
 /* =========================================================
-   FORMULÁRIO
+   ABRIR CHAT
    ========================================================= */
 
-function registrarFormulario() {
+async function abrirChat() {
+  abrirInterfaceChat();
 
-    const formulario =
-        document.getElementById("chatFormulario");
+  atualizarBotaoFlutuante(true);
 
-    const campo =
-        document.getElementById("chatCampo");
+  if (!aplicacaoPronta) {
+    await prepararAtendimento();
 
-    formulario.addEventListener(
-        "submit",
-        async (evento) => {
+    return;
+  }
 
-            evento.preventDefault();
-
-            const mensagem =
-                campo.value.trim();
-
-            if (!mensagem) return;
-
-            campo.value = "";
-
-            await processarMensagemUsuario(
-                mensagem
-            );
-
-        }
-    );
-
+  await garantirConversaIniciada();
 }
 
 
 /* =========================================================
-   RESPOSTAS RÁPIDAS
+   FECHAR CHAT
    ========================================================= */
 
-function registrarRespostasRapidas() {
+function fecharChat() {
+  fecharInterfaceChat();
 
-    const respostas =
-        document.getElementById("chatRespostasRapidas");
+  atualizarBotaoFlutuante(false);
+}
 
-    respostas.addEventListener(
-        "click",
-        async (evento) => {
 
-            const botao =
-                evento.target.closest("button");
+/* =========================================================
+   GARANTIR CONVERSA
+   ========================================================= */
 
-            if (!botao) return;
+async function garantirConversaIniciada() {
+  if (conversaFoiIniciada()) {
+    return;
+  }
 
-            const texto =
-                botao.dataset.valor;
+  await iniciarConversa();
+}
 
-            await processarRespostaRapida(
-                texto
-            );
 
-        }
+/* =========================================================
+   REINICIAR CONVERSA
+   ========================================================= */
+
+async function reiniciarAtendimento() {
+  if (!aplicacaoPronta) {
+    await prepararAtendimento();
+
+    return;
+  }
+
+  await reiniciarConversa();
+}
+
+
+/* =========================================================
+   ENVIAR MENSAGEM
+   ========================================================= */
+
+async function enviarMensagemDoFormulario(
+  evento
+) {
+  evento.preventDefault();
+
+  if (!aplicacaoPronta) {
+    return;
+  }
+
+  const mensagem =
+    obterValorCampo();
+
+  if (!mensagem) {
+    return;
+  }
+
+  await processarMensagem(
+    mensagem
+  );
+}
+
+
+/* =========================================================
+   VERIFICAR SE O CHAT ESTÁ ABERTO
+   ========================================================= */
+
+function chatEstaAberto() {
+  const chat =
+    document.getElementById(
+      "chat"
     );
 
+  if (!chat) {
+    return false;
+  }
+
+  return (
+    chat.getAttribute(
+      "aria-hidden"
+    ) === "false"
+  );
+}
+
+
+/* =========================================================
+   BOTÃO FLUTUANTE
+   ========================================================= */
+
+function atualizarBotaoFlutuante(
+  aberto
+) {
+  const botao =
+    document.getElementById(
+      "chatBotaoFlutuante"
+    );
+
+  if (!botao) {
+    return;
+  }
+
+  botao.setAttribute(
+    "aria-expanded",
+    String(Boolean(aberto))
+  );
+}
+
+
+/* =========================================================
+   STATUS DO CHAT
+   ========================================================= */
+
+function atualizarStatus(
+  texto
+) {
+  const status =
+    document.getElementById(
+      "chatStatusTexto"
+    );
+
+  if (!status) {
+    return;
+  }
+
+  status.textContent = texto;
 }
