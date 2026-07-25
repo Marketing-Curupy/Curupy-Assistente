@@ -36,7 +36,6 @@ import {
 
     definirVisitante,
     obterVisitante,
-    limparVisitante,
 
     definirConversaIniciada,
     conversaFoiIniciada as storageConversaFoiIniciada,
@@ -54,33 +53,18 @@ import {
    ESTADO LOCAL DO CHAT
    ========================================================= */
 
-/*
- * Apenas estados temporários permanecem neste arquivo.
- *
- * Visitante, contexto, histórico e conversa iniciada
- * ficam centralizados no storage.js.
- */
-
 const estado = {
     processando: false,
-
     aguardandoNome: false,
 
     base: {
         intencoes: [],
-
         configuracoes: {},
-
         fluxoInicial: [],
-
         contatos: [],
-
         funcionamento: [],
-
         hospedagem: {},
-
         bangalo: {},
-
         quiosque: {}
     }
 };
@@ -136,6 +120,13 @@ export function configurarBaseConhecimento(dados = {}) {
                 ? dados.quiosque
                 : {}
     };
+
+    console.info("Acqua: base configurada.", {
+        intencoes: estado.base.intencoes.length,
+        fluxoInicial: estado.base.fluxoInicial.length,
+        contatos: estado.base.contatos.length,
+        funcionamento: estado.base.funcionamento.length
+    });
 }
 
 
@@ -149,19 +140,14 @@ export async function iniciarConversa() {
     }
 
     estado.processando = true;
-
     estado.aguardandoNome = false;
 
     limparEstado();
-
     definirConversaIniciada(true);
 
     limparMensagens();
-
     limparSugestoes();
-
     limparCampo();
-
     bloquearCampo(true);
 
     try {
@@ -177,20 +163,20 @@ export async function iniciarConversa() {
             estado.aguardandoNome = true;
 
             const mensagem =
-                obterConfiguracao(
-                    "mensagem_pedir_nome",
-                    [
-                        "Olá! 👋",
-                        "Sou o Acqua, assistente virtual do Curupy.",
-                        "",
-                        "Antes de começarmos, como posso chamar você?"
-                    ].join("\n")
+                obterMensagemFluxo(
+                    "PEDIR_NOME",
+                    obterConfiguracao(
+                        "mensagem_pedir_nome",
+                        [
+                            "Olá! 👋",
+                            "Sou o Acqua, assistente virtual do Curupy.",
+                            "",
+                            "Antes de começarmos, como posso chamar você?"
+                        ].join("\n")
+                    )
                 );
 
-            registrarMensagemAssistente(
-                mensagem
-            );
-
+            registrarMensagemAssistente(mensagem);
             return;
         }
 
@@ -206,9 +192,7 @@ export async function iniciarConversa() {
         );
     } finally {
         estado.processando = false;
-
         bloquearCampo(false);
-
         focarCampo();
     }
 }
@@ -226,11 +210,8 @@ export async function reiniciarConversa() {
     estado.aguardandoNome = false;
 
     limparEstado();
-
     limparMensagens();
-
     limparSugestoes();
-
     limparCampo();
 
     await iniciarConversa();
@@ -242,22 +223,16 @@ export async function reiniciarConversa() {
    ========================================================= */
 
 export async function processarMensagem(mensagem) {
-    const texto =
-        limparTexto(mensagem);
+    const texto = limparTexto(mensagem);
 
-    if (
-        !texto ||
-        estado.processando
-    ) {
+    if (!texto || estado.processando) {
         return;
     }
 
     estado.processando = true;
 
     bloquearCampo(true);
-
     limparCampo();
-
     limparSugestoes();
 
     registrarMensagemUsuario(texto);
@@ -265,7 +240,6 @@ export async function processarMensagem(mensagem) {
     try {
         if (estado.aguardandoNome) {
             await processarNome(texto);
-
             return;
         }
 
@@ -282,13 +256,9 @@ export async function processarMensagem(mensagem) {
             );
 
         if (resultado) {
-            responderIntencao(
-                resultado
-            );
+            responderIntencao(resultado);
         } else {
-            responderFallback(
-                texto
-            );
+            responderFallback(texto);
         }
     } catch (erro) {
         console.error(
@@ -296,14 +266,10 @@ export async function processarMensagem(mensagem) {
             erro
         );
 
-        responderFallback(
-            texto
-        );
+        responderFallback(texto);
     } finally {
         estado.processando = false;
-
         bloquearCampo(false);
-
         focarCampo();
     }
 }
@@ -327,32 +293,29 @@ async function processarNome(mensagem) {
                 ].join("\n")
             );
 
-        registrarMensagemAssistente(
-            mensagemInvalida
-        );
-
+        registrarMensagemAssistente(mensagemInvalida);
         estado.aguardandoNome = true;
-
         return;
     }
 
     const nome =
         extrairPrimeiroNome(mensagem);
 
-    definirVisitante({
-        nome
-    });
+    definirVisitante({ nome });
 
     estado.aguardandoNome = false;
 
     const mensagemBoasVindas =
-        obterConfiguracao(
-            "mensagem_boas_vindas",
-            [
-                "Prazer, {nome}! 😊",
-                "",
-                "Como posso ajudar você hoje?"
-            ].join("\n")
+        obterMensagemFluxo(
+            "CONFIRMAR_NOME",
+            obterConfiguracao(
+                "mensagem_boas_vindas",
+                [
+                    "Prazer, {nome}! 😊",
+                    "",
+                    "Como posso ajudar você hoje?"
+                ].join("\n")
+            )
         );
 
     const mensagemFormatada =
@@ -375,14 +338,17 @@ async function processarNome(mensagem) {
 
 async function apresentarMenuInicial() {
     const mensagem =
-        obterConfiguracao(
-            "mensagem_inicial",
-            [
-                "Olá! 👋",
-                "Sou o Acqua, assistente virtual do Curupy.",
-                "",
-                "Como posso ajudar você hoje?"
-            ].join("\n")
+        obterMensagemFluxo(
+            "APRESENTACAO",
+            obterConfiguracao(
+                "mensagem_inicial",
+                [
+                    "Olá! 👋",
+                    "Sou o Acqua, assistente virtual do Curupy.",
+                    "",
+                    "Como posso ajudar você hoje?"
+                ].join("\n")
+            )
         );
 
     const mensagemFormatada =
@@ -416,98 +382,165 @@ function mostrarMenuInicial() {
 
 function prepararFluxoInicial() {
     const fluxoInicial =
-        Array.isArray(
-            estado.base.fluxoInicial
-        )
+        Array.isArray(estado.base.fluxoInicial)
             ? estado.base.fluxoInicial
             : [];
 
-    const fluxo =
+    const itemMenu =
+        fluxoInicial.find(item => {
+            return normalizarIdentificador(item?.id) ===
+                "menu_principal";
+        });
+
+    if (itemMenu) {
+        const mensagemAcao =
+            limparTexto(
+                itemMenu?.mensagem_acao ||
+                itemMenu?.mensagem ||
+                ""
+            );
+
+        const opcoes =
+            extrairOpcoesMenu(mensagemAcao);
+
+        if (opcoes.length > 0) {
+            return opcoes.map(opcao => ({
+                texto: formatarTextoBotao(opcao),
+                mensagem: opcao
+            }));
+        }
+    }
+
+    /*
+     * Compatibilidade com uma possível estrutura futura,
+     * contendo uma opção por linha.
+     */
+    const opcoesPorLinha =
         fluxoInicial
             .filter(item => {
-                return itemEstaAtivo(item);
+                if (!itemEstaAtivo(item)) {
+                    return false;
+                }
+
+                return Boolean(
+                    limparTexto(
+                        item?.texto ||
+                        item?.titulo ||
+                        item?.botao ||
+                        item?.nome
+                    )
+                );
             })
             .sort((a, b) => {
                 return (
-                    Number(a?.ordem || 0) -
-                    Number(b?.ordem || 0)
+                    Number(a?.ordem || a?.etapa || 0) -
+                    Number(b?.ordem || b?.etapa || 0)
                 );
-            });
+            })
+            .map(item => {
+                const texto =
+                    limparTexto(
+                        item?.texto ||
+                        item?.titulo ||
+                        item?.botao ||
+                        item?.nome
+                    );
 
-    if (fluxo.length > 0) {
-        return fluxo.map(item => {
-            const texto =
-                limparTexto(
-                    item?.texto ||
-                    item?.titulo ||
-                    item?.botao ||
-                    item?.nome ||
-                    "Opção"
-                );
+                const destino =
+                    limparTexto(
+                        item?.mensagem ||
+                        item?.pergunta ||
+                        item?.destino ||
+                        texto
+                    );
 
-            const destino =
-                limparTexto(
-                    item?.mensagem ||
-                    item?.pergunta ||
-                    item?.destino ||
-                    texto
-                );
+                if (ehLink(destino)) {
+                    return {
+                        texto,
+                        link: destino
+                    };
+                }
 
-            if (ehLink(destino)) {
                 return {
                     texto,
-                    link: destino
+                    mensagem: destino
                 };
-            }
+            });
 
-            return {
-                texto,
-                mensagem: destino
-            };
-        });
+    if (opcoesPorLinha.length > 0) {
+        return opcoesPorLinha;
     }
 
+    return obterMenuPadrao();
+}
+
+
+function extrairOpcoesMenu(mensagemAcao) {
+    const texto =
+        String(mensagemAcao || "")
+            .replace(
+                /^\s*exibir\s+os\s+bot[oõ]es\s*:\s*/i,
+                ""
+            )
+            .trim();
+
+    if (!texto) {
+        return [];
+    }
+
+    return texto
+        .split("|")
+        .map(opcao => limparTexto(opcao))
+        .filter(Boolean);
+}
+
+
+function formatarTextoBotao(opcao) {
+    const texto =
+        limparTexto(opcao);
+
+    const textoNormalizado =
+        normalizarIdentificador(texto);
+
+    const icones = {
+        ingressos: "🎟",
+        ingresso: "🎟",
+        dias_e_horarios: "📅",
+        funcionamento: "📅",
+        hospedagem: "🏨",
+        associe_se: "💎",
+        socios: "💎",
+        reservas: "📋",
+        regras: "📋",
+        como_chegar: "📍"
+    };
+
+    const icone =
+        icones[textoNormalizado];
+
+    return icone
+        ? `${icone} ${texto}`
+        : texto;
+}
+
+
+function obterMenuPadrao() {
     return [
         {
             texto: "🎟 Ingressos",
-
-            mensagem:
-                "Quero informações sobre ingressos"
+            mensagem: "Ingressos"
         },
-
         {
-            texto: "📅 Funcionamento",
-
-            mensagem:
-                "Quero saber o funcionamento"
+            texto: "📅 Dias e horários",
+            mensagem: "Dias e horários"
         },
-
         {
             texto: "🏨 Hospedagem",
-
-            mensagem:
-                "Quero saber sobre hospedagem"
+            mensagem: "Hospedagem"
         },
-
         {
-            texto: "💎 Sócios",
-
-            mensagem:
-                "Quero informações para sócios"
-        },
-
-        {
-            texto: "📋 Regras",
-
-            mensagem:
-                "Quero conhecer as regras"
-        },
-
-        {
-            texto: "📍 Como chegar",
-
-            mensagem:
-                "Como chegar ao Curupy?"
+            texto: "💎 Associe-se",
+            mensagem: "Associe-se"
         }
     ];
 }
@@ -518,9 +551,7 @@ function prepararFluxoInicial() {
    ========================================================= */
 
 function responderIntencao(resultado) {
-    atualizarContexto(
-        resultado
-    );
+    atualizarContexto(resultado);
 
     const respostaOriginal =
         resultado?.resposta || "";
@@ -533,17 +564,20 @@ function responderIntencao(resultado) {
 
     if (!limparTexto(resposta)) {
         responderFallback("");
-
         return;
     }
 
-    registrarMensagemAssistente(
-        resposta
-    );
+    registrarMensagemAssistente(resposta);
+
+    const sugestoesOriginais =
+        resultado?.sugestoes ||
+        resultado?.sugestoesRapidas ||
+        resultado?.sugestoes_rapidas ||
+        [];
 
     const sugestoes =
         prepararSugestoesComVariaveis(
-            resultado?.sugestoes
+            sugestoesOriginais
         );
 
     if (sugestoes.length > 0) {
@@ -558,11 +592,8 @@ function responderIntencao(resultado) {
     atualizarSugestoes(
         [
             {
-                texto:
-                    "🏠 Menu principal",
-
-                mensagem:
-                    "Quero voltar ao menu principal"
+                texto: "🏠 Menu principal",
+                mensagem: "Quero voltar ao menu principal"
             }
         ],
         processarAcaoEspecial
@@ -594,35 +625,20 @@ function responderFallback(mensagemOriginal) {
 
     const sugestoes = [
         {
-            texto:
-                "🎟 Ingressos",
-
-            mensagem:
-                "Quero informações sobre ingressos"
+            texto: "🎟 Ingressos",
+            mensagem: "Ingressos"
         },
-
         {
-            texto:
-                "📅 Funcionamento",
-
-            mensagem:
-                "Quero saber o funcionamento"
+            texto: "📅 Dias e horários",
+            mensagem: "Dias e horários"
         },
-
         {
-            texto:
-                "🏨 Hospedagem",
-
-            mensagem:
-                "Quero saber sobre hospedagem"
+            texto: "🏨 Hospedagem",
+            mensagem: "Hospedagem"
         },
-
         {
-            texto:
-                "🏠 Menu principal",
-
-            mensagem:
-                "Quero voltar ao menu principal"
+            texto: "🏠 Menu principal",
+            mensagem: "Quero voltar ao menu principal"
         }
     ];
 
@@ -633,11 +649,8 @@ function responderFallback(mensagemOriginal) {
 
     if (whatsapp) {
         sugestoes.push({
-            texto:
-                "💬 Falar no WhatsApp",
-
-            link:
-                whatsapp
+            texto: "💬 Falar no WhatsApp",
+            link: whatsapp
         });
     }
 
@@ -657,11 +670,7 @@ async function processarAcaoEspecial(mensagem) {
         limparTexto(mensagem)
             .toLowerCase();
 
-    if (
-        texto.includes(
-            "menu principal"
-        )
-    ) {
+    if (texto.includes("menu principal")) {
         if (estado.processando) {
             return;
         }
@@ -669,7 +678,6 @@ async function processarAcaoEspecial(mensagem) {
         estado.processando = true;
 
         bloquearCampo(true);
-
         limparSugestoes();
 
         registrarMensagemUsuario(
@@ -697,18 +705,14 @@ async function processarAcaoEspecial(mensagem) {
             mostrarMenuInicial();
         } finally {
             estado.processando = false;
-
             bloquearCampo(false);
-
             focarCampo();
         }
 
         return;
     }
 
-    await processarMensagem(
-        mensagem
-    );
+    await processarMensagem(mensagem);
 }
 
 
@@ -731,10 +735,14 @@ function atualizarContexto(resultado) {
         );
     }
 
-    if (resultado?.intencao) {
+    if (
+        resultado?.intencao ||
+        resultado?.id
+    ) {
         definirContexto(
             "intencao",
-            resultado.intencao
+            resultado?.intencao ||
+            resultado?.id
         );
     }
 }
@@ -745,9 +753,7 @@ function atualizarContexto(resultado) {
    ========================================================= */
 
 function registrarMensagemUsuario(mensagem) {
-    adicionarMensagemUsuario(
-        mensagem
-    );
+    adicionarMensagemUsuario(mensagem);
 
     adicionarAoHistorico(
         "usuario",
@@ -757,9 +763,7 @@ function registrarMensagemUsuario(mensagem) {
 
 
 function registrarMensagemAssistente(mensagem) {
-    adicionarMensagemAssistente(
-        mensagem
-    );
+    adicionarMensagemAssistente(mensagem);
 
     adicionarAoHistorico(
         "assistente",
@@ -768,18 +772,13 @@ function registrarMensagemAssistente(mensagem) {
 }
 
 
-function adicionarAoHistorico(
-    remetente,
-    mensagem
-) {
+function adicionarAoHistorico(remetente, mensagem) {
     const texto =
         String(mensagem || "");
 
     adicionarMensagemAoStorage({
         remetente,
-
         mensagem: texto,
-
         horario: Date.now()
     });
 
@@ -792,21 +791,15 @@ function limitarHistorico() {
         obterHistoricoDoStorage();
 
     const limiteConfigurado =
-        Number(
-            CONFIG?.limiteHistorico
-        );
+        Number(CONFIG?.limiteHistorico);
 
     const limite =
-        Number.isFinite(
-            limiteConfigurado
-        ) &&
+        Number.isFinite(limiteConfigurado) &&
         limiteConfigurado > 0
             ? limiteConfigurado
             : 50;
 
-    if (
-        historico.length <= limite
-    ) {
+    if (historico.length <= limite) {
         return;
     }
 
@@ -815,13 +808,9 @@ function limitarHistorico() {
 
     limparHistorico();
 
-    mensagensMantidas.forEach(
-        mensagem => {
-            adicionarMensagemAoStorage(
-                mensagem
-            );
-        }
-    );
+    mensagensMantidas.forEach(mensagem => {
+        adicionarMensagemAoStorage(mensagem);
+    });
 }
 
 
@@ -834,10 +823,7 @@ export function obterHistorico() {
    CONFIGURAÇÕES DA PLANILHA
    ========================================================= */
 
-function obterConfiguracao(
-    chave,
-    valorPadrao = ""
-) {
+function obterConfiguracao(chave, valorPadrao = "") {
     const configuracoes =
         estado.base.configuracoes;
 
@@ -847,7 +833,30 @@ function obterConfiguracao(
         typeof configuracoes === "object" &&
         configuracoes[chave] !== undefined
     ) {
-        return configuracoes[chave];
+        const valorConfigurado =
+            configuracoes[chave];
+
+        /*
+         * O Apps Script retorna:
+         * configuracoes[chave] = {
+         *     valor: "...",
+         *     observacao: "..."
+         * }
+         */
+        if (
+            valorConfigurado &&
+            typeof valorConfigurado === "object" &&
+            !Array.isArray(valorConfigurado)
+        ) {
+            return (
+                valorConfigurado?.valor ??
+                valorConfigurado?.conteudo ??
+                valorConfigurado?.mensagem ??
+                valorPadrao
+            );
+        }
+
+        return valorConfigurado;
     }
 
     if (Array.isArray(configuracoes)) {
@@ -875,19 +884,14 @@ function obterConfiguracao(
 }
 
 
-function obterConfiguracaoBooleana(
-    chave,
-    valorPadrao
-) {
+function obterConfiguracaoBooleana(chave, valorPadrao) {
     const valor =
         obterConfiguracao(
             chave,
             valorPadrao
         );
 
-    if (
-        typeof valor === "boolean"
-    ) {
+    if (typeof valor === "boolean") {
         return valor;
     }
 
@@ -920,9 +924,36 @@ function obterConfiguracaoBooleana(
         return false;
     }
 
-    return Boolean(
-        valorPadrao
-    );
+    return Boolean(valorPadrao);
+}
+
+
+/* =========================================================
+   FLUXO INICIAL
+   ========================================================= */
+
+function obterMensagemFluxo(id, valorPadrao = "") {
+    const identificador =
+        normalizarIdentificador(id);
+
+    const item =
+        estado.base.fluxoInicial.find(itemFluxo => {
+            return (
+                normalizarIdentificador(
+                    itemFluxo?.id
+                ) === identificador
+            );
+        });
+
+    const mensagem =
+        item?.mensagem_acao ||
+        item?.mensagem ||
+        item?.texto ||
+        "";
+
+    return limparTexto(mensagem)
+        ? mensagem
+        : valorPadrao;
 }
 
 
@@ -930,17 +961,11 @@ function obterConfiguracaoBooleana(
    SUGESTÕES
    ========================================================= */
 
-function prepararSugestoesComVariaveis(
-    sugestoes
-) {
-    if (
-        !Array.isArray(sugestoes)
-    ) {
-        return [];
-    }
+function prepararSugestoesComVariaveis(sugestoes) {
+    const lista =
+        normalizarSugestoes(sugestoes);
 
-    return sugestoes
-        .filter(Boolean)
+    return lista
         .map(sugestao => {
             const texto =
                 substituirVariaveis(
@@ -962,20 +987,65 @@ function prepararSugestoesComVariaveis(
 
             return {
                 ...sugestao,
-
                 texto,
-
                 mensagem,
-
                 link
             };
         })
         .filter(sugestao => {
             return Boolean(
-                limparTexto(
-                    sugestao.texto
-                )
+                limparTexto(sugestao.texto)
             );
+        });
+}
+
+
+function normalizarSugestoes(sugestoes) {
+    if (!Array.isArray(sugestoes)) {
+        return [];
+    }
+
+    return sugestoes
+        .filter(Boolean)
+        .map(sugestao => {
+            if (typeof sugestao === "string") {
+                const texto =
+                    limparTexto(sugestao);
+
+                return {
+                    texto,
+                    mensagem: texto
+                };
+            }
+
+            const texto =
+                limparTexto(
+                    sugestao?.texto ||
+                    sugestao?.titulo ||
+                    sugestao?.nome ||
+                    sugestao?.mensagem
+                );
+
+            const mensagem =
+                limparTexto(
+                    sugestao?.mensagem ||
+                    sugestao?.pergunta ||
+                    texto
+                );
+
+            const link =
+                limparTexto(
+                    sugestao?.link ||
+                    sugestao?.url ||
+                    ""
+                );
+
+            return {
+                ...sugestao,
+                texto,
+                mensagem,
+                link
+            };
         });
 }
 
@@ -1022,26 +1092,18 @@ async function esperarDigitacao() {
     mostrarDigitando();
 
     const minimoConfigurado =
-        Number(
-            CONFIG?.tempoDigitando?.minimo
-        );
+        Number(CONFIG?.tempoDigitando?.minimo);
 
     const maximoConfigurado =
-        Number(
-            CONFIG?.tempoDigitando?.maximo
-        );
+        Number(CONFIG?.tempoDigitando?.maximo);
 
     const minimo =
-        Number.isFinite(
-            minimoConfigurado
-        )
+        Number.isFinite(minimoConfigurado)
             ? minimoConfigurado
             : 600;
 
     const maximo =
-        Number.isFinite(
-            maximoConfigurado
-        )
+        Number.isFinite(maximoConfigurado)
             ? Math.max(
                 maximoConfigurado,
                 minimo
@@ -1055,9 +1117,7 @@ async function esperarDigitacao() {
         ) + minimo;
 
     try {
-        await esperar(
-            duracao
-        );
+        await esperar(duracao);
     } finally {
         removerDigitando();
     }
@@ -1068,9 +1128,7 @@ async function esperarDigitacao() {
    WHATSAPP
    ========================================================= */
 
-function obterLinkWhatsAppFallback(
-    mensagemOriginal
-) {
+function obterLinkWhatsAppFallback(mensagemOriginal) {
     const linkConfigurado =
         obterConfiguracao(
             "whatsapp_geral",
@@ -1080,28 +1138,20 @@ function obterLinkWhatsAppFallback(
         );
 
     const link =
-        limparTexto(
-            linkConfigurado
-        );
+        limparTexto(linkConfigurado);
 
     if (!link) {
         return "";
     }
 
     const texto =
-        limparTexto(
-            mensagemOriginal
-        )
+        limparTexto(mensagemOriginal)
             ? `Olá! Preciso de ajuda com esta dúvida: ${limparTexto(mensagemOriginal)}`
             : "Olá! Preciso de ajuda com uma informação do Curupy.";
 
     if (
-        link.includes(
-            "wa.me"
-        ) ||
-        link.includes(
-            "api.whatsapp.com"
-        )
+        link.includes("wa.me") ||
+        link.includes("api.whatsapp.com")
     ) {
         const separador =
             link.includes("?")
@@ -1132,16 +1182,13 @@ function itemEstaAtivo(item = {}) {
         return true;
     }
 
-    if (
-        typeof item.ativo === "boolean"
-    ) {
+    if (typeof item.ativo === "boolean") {
         return item.ativo;
     }
 
     const valor =
-        limparTexto(
-            item.ativo
-        ).toLowerCase();
+        limparTexto(item.ativo)
+            .toLowerCase();
 
     return [
         "sim",
@@ -1150,6 +1197,17 @@ function itemEstaAtivo(item = {}) {
         "ativo",
         "ativado"
     ].includes(valor);
+}
+
+
+function normalizarIdentificador(valor) {
+    return String(valor || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
 }
 
 
