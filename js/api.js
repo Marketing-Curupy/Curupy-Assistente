@@ -10,7 +10,6 @@ import {
     objetoValido
 } from "./utils.js";
 
-
 /* =========================================================
    CARREGAR BASE DE CONHECIMENTO
    ========================================================= */
@@ -48,13 +47,8 @@ export async function carregarBaseConhecimento() {
             baseNormalizada
         );
 
-        return {
-            dados:
-                baseNormalizada,
+        return baseNormalizada;
 
-            origem:
-                "planilha"
-        };
     } catch (erro) {
         console.error(
             "Acqua: não foi possível carregar a planilha.",
@@ -66,13 +60,7 @@ export async function carregarBaseConhecimento() {
                 "Acqua: utilizando a última versão válida salva no navegador."
             );
 
-            return {
-                dados:
-                    dadosEmCache,
-
-                origem:
-                    "cache"
-            };
+            return dadosEmCache;
         }
 
         throw criarErroCarregamento(
@@ -80,8 +68,6 @@ export async function carregarBaseConhecimento() {
         );
     }
 }
-
-
 /* =========================================================
    VALIDAR CONFIGURAÇÃO
    ========================================================= */
