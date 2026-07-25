@@ -581,11 +581,10 @@ function responderIntencao(resultado) {
         );
 
     if (sugestoes.length > 0) {
-        atualizarSugestoes(
-            sugestoes,
-            processarMensagem
-        );
-
+       atualizarSugestoes(
+    sugestoes,
+    processarAcaoEspecial
+);
         return;
     }
 
