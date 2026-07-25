@@ -1,41 +1,137 @@
 /* =========================================================
-   ACQUA — CONFIGURAÇÕES GERAIS
+   ACQUA
+   CONFIGURAÇÕES GERAIS
    ========================================================= */
 
 export const CONFIG = {
-  apiUrl:
-    "https://script.google.com/macros/s/AKfycbzIZOlrc_7e-ReVRsIBRukTE0P5bwoxIKXckOi6zsc6I3PtdXhG87Oz0iKVfJnnGZ46Bw/exec",
 
-  nomeAssistente: "Acqua",
+    /* =====================================================
+       API
+       ===================================================== */
 
-  idioma: "pt-BR",
+    apiUrl:
+        "https://script.google.com/macros/s/AKfycbzIZOlrc_7e-ReVRsIBRukTE0P5bwoxIKXckOi6zsc6I3PtdXhG87Oz0iKVfJnnGZ46Bw/exec",
 
-  tempoDigitando: {
-    minimo: 600,
-    maximo: 1200
-  },
+    tempoLimiteApi: 10000,
 
-  limiteHistorico: 20,
 
-  tempoLimiteApi: 10000,
+    /* =====================================================
+       ASSISTENTE
+       ===================================================== */
 
-  cache: {
-    chave: "acqua_base_conhecimento",
-    validadeMinutos: 30
-  },
+    nomeAssistente: "Acqua",
 
-  fallback: {
-    mensagem:
-      "Ainda não consegui entender exatamente essa dúvida 😅\n\nVocê pode escrever de outra forma ou escolher um dos assuntos abaixo."
-  },
+    idioma: "pt-BR",
 
-  linksEmergencia: {
-    site: "https://curupy.com.br",
 
-    localizacao:
-      "https://maps.app.goo.gl/fKZki9NEw4o3drdH7",
+    /* =====================================================
+       DIGITAÇÃO
+       ===================================================== */
 
-    whatsappGeral:
-      "https://wa.me/556630151337"
-  }
+    tempoDigitando: {
+
+        minimo: 600,
+
+        maximo: 1200
+
+    },
+
+
+    /* =====================================================
+       CONVERSA
+       ===================================================== */
+
+    limiteHistorico: 20,
+
+    limiteMensagem: 500,
+
+
+    /* =====================================================
+       CACHE
+       ===================================================== */
+
+    cache: {
+
+        chave:
+            "acqua_base_conhecimento",
+
+        validadeMinutos: 30
+
+    },
+
+
+    /* =====================================================
+       FALLBACK
+       ===================================================== */
+
+    fallback: {
+
+        mensagem:
+            "Ainda não consegui entender exatamente essa dúvida. 😊\n\nVocê pode escrever de outra forma ou escolher um dos assuntos abaixo."
+
+    },
+
+
+    /* =====================================================
+       LINKS
+       ===================================================== */
+
+    linksEmergencia: {
+
+        site:
+            "https://curupy.com.br",
+
+        whatsappGeral:
+            "https://wa.me/556630151337",
+
+        localizacao:
+            "https://maps.app.goo.gl/fKZki9NEw4o3drdH7"
+
+    },
+
+
+    /* =====================================================
+       MENSAGENS PADRÃO
+       ===================================================== */
+
+    mensagens: {
+
+        erroGenerico:
+            "Ocorreu um erro inesperado.",
+
+        erroApi:
+            "Não foi possível conectar ao servidor.",
+
+        carregando:
+            "Carregando informações...",
+
+        digitando:
+            "Acqua está digitando..."
+
+    },
+
+
+    /* =====================================================
+       LOG
+       ===================================================== */
+
+    debug: false
+
 };
+
+
+/* =========================================================
+   CONFIGURAÇÕES IMUTÁVEIS
+   ========================================================= */
+
+Object.freeze(CONFIG);
+
+Object.freeze(CONFIG.cache);
+
+Object.freeze(CONFIG.fallback);
+
+Object.freeze(CONFIG.linksEmergencia);
+
+Object.freeze(CONFIG.tempoDigitando);
+
+Object.freeze(CONFIG.mensagens);
