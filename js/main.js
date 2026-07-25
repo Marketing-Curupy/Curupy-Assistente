@@ -1,405 +1,435 @@
-/* =========================================================
-   ACQUA
-   ARQUIVO PRINCIPAL
-   ========================================================= */
+/* ========================================================= ACQUA
+ARQUIVO PRINCIPAL
+========================================================= */
 
-import {
-  carregarBaseConhecimento
-} from "./api.js";
+import { carregarBaseConhecimento } from “./api.js”;
 
+import { configurarBaseConhecimento, conversaFoiIniciada,
+iniciarConversa, processarMensagem, reiniciarConversa } from
+“./chat.js”;
 
-/* =========================================================
-   ELEMENTOS
-   ========================================================= */
+import { abrirInterfaceChat, bloquearCampo, esconderCarregando,
+esconderErro, fecharInterfaceChat, focarCampo, iniciarUI,
+mostrarCarregando, mostrarErro, obterElementosUI, obterValorCampo } from
+“./ui.js”;
 
-const chat =
-  document.getElementById("chat");
+/* ========================================================= ESTADO DA
+APLICAÇÃO ========================================================= */
 
-const chatBotaoFlutuante =
-  document.getElementById("chatBotaoFlutuante");
-
-const abrirChatTeste =
-  document.getElementById("abrirChatTeste");
-
-const fecharChat =
-  document.getElementById("fecharChat");
-
-const reiniciarChat =
-  document.getElementById("reiniciarChat");
-
-const chatStatusTexto =
-  document.getElementById("chatStatusTexto");
-
-const chatCarregamento =
-  document.getElementById("chatCarregamento");
-
-const chatCarregamentoTexto =
-  document.getElementById("chatCarregamentoTexto");
-
-const chatMensagens =
-  document.getElementById("chatMensagens");
-
-const chatRespostasRapidas =
-  document.getElementById("chatRespostasRapidas");
-
-const chatErro =
-  document.getElementById("chatErro");
-
-const chatErroTexto =
-  document.getElementById("chatErroTexto");
-
-const tentarNovamente =
-  document.getElementById("tentarNovamente");
-
-const chatFormulario =
-  document.getElementById("chatFormulario");
-
-const chatCampo =
-  document.getElementById("chatCampo");
-
-const chatEnviar =
-  document.getElementById("chatEnviar");
-
+const estadoAplicacao = { uiIniciada: false, eventosRegistrados: false,
+aplicacaoPronta: false, carregandoBase: false, chatAberto: false };
 
 /* =========================================================
-   ESTADO
-   ========================================================= */
+INICIALIZAÇÃO =========================================================
+*/
 
-let baseConhecimento = null;
+if (document.readyState === “loading”) { document.addEventListener(
+“DOMContentLoaded”, iniciarAplicacao, { once: true } ); } else {
+iniciarAplicacao(); }
 
+async function iniciarAplicacao() { try { const interfaceIniciada =
+iniciarUI();
 
-/* =========================================================
-   CONTROLE DO CHAT
-   ========================================================= */
+        if (!interfaceIniciada) {
+            throw new Error(
+                "Não foi possível iniciar a interface do Acqua."
+            );
+        }
 
-function abrirChat() {
-  chat.classList.add("chat--aberto");
-  chat.setAttribute("aria-hidden", "false");
+        estadoAplicacao.uiIniciada =
+            true;
 
-  chatBotaoFlutuante.setAttribute(
-    "aria-expanded",
-    "true"
-  );
+        registrarEventos();
 
-  if (!chatCampo.disabled) {
-    setTimeout(() => {
-      chatCampo.focus();
-    }, 200);
-  }
-}
+        bloquearCampo(true);
+        mostrarCarregando();
+        esconderErro();
 
-
-function fecharJanelaChat() {
-  chat.classList.remove("chat--aberto");
-  chat.setAttribute("aria-hidden", "true");
-
-  chatBotaoFlutuante.setAttribute(
-    "aria-expanded",
-    "false"
-  );
-}
-
-
-/* =========================================================
-   MENSAGENS
-   ========================================================= */
-
-function adicionarMensagem(texto, autor = "acqua") {
-  const mensagem = document.createElement("div");
-
-  mensagem.className =
-    `chat__mensagem chat__mensagem--${autor}`;
-
-  mensagem.textContent = texto;
-
-  chatMensagens.appendChild(mensagem);
-
-  chatMensagens.scrollTop =
-    chatMensagens.scrollHeight;
-}
-
-
-function mostrarMensagemInicial() {
-  chatMensagens.innerHTML = "";
-
-  adicionarMensagem(
-    "Olá! Eu sou o Acqua, assistente virtual do Curupy Acqua Park. Como posso ajudar?"
-  );
-}
-
-
-/* =========================================================
-   RESPOSTAS RÁPIDAS
-   ========================================================= */
-
-function criarRespostasRapidas() {
-  chatRespostasRapidas.innerHTML = "";
-
-  const respostas = [
-    "Horário de funcionamento",
-    "Valores dos ingressos",
-    "Hospedagem",
-    "Falar com atendimento"
-  ];
-
-  respostas.forEach((texto) => {
-    const botao = document.createElement("button");
-
-    botao.type = "button";
-    botao.textContent = texto;
-
-    botao.addEventListener("click", () => {
-      processarMensagem(texto);
-    });
-
-    chatRespostasRapidas.appendChild(botao);
-  });
-}
-
-
-/* =========================================================
-   PROCESSAMENTO INICIAL
-   ========================================================= */
-
-function normalizarTexto(texto) {
-  return texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
-
-function procurarIntencao(mensagem) {
-  if (!baseConhecimento?.intencoes) {
-    return null;
-  }
-
-  const textoUsuario =
-    normalizarTexto(mensagem);
-
-  return baseConhecimento.intencoes.find(
-    (intencao) => {
-      const termos =
-        intencao.palavrasChave ||
-        intencao.palavras_chave ||
-        intencao.PALAVRAS_CHAVE ||
-        [];
-
-      const listaTermos =
-        Array.isArray(termos)
-          ? termos
-          : String(termos).split("|");
-
-      return listaTermos.some((termo) => {
-        const termoNormalizado =
-          normalizarTexto(String(termo));
-
-        return (
-          termoNormalizado &&
-          textoUsuario.includes(termoNormalizado)
+        atualizarStatus(
+            "Carregando informações..."
         );
-      });
+
+        await prepararAtendimento();
+    } catch (erro) {
+        tratarErroInicializacao(
+            erro
+        );
     }
-  );
+
 }
 
+/* ========================================================= CARREGAR
+BASE DE CONHECIMENTO
+========================================================= */
 
-function obterRespostaIntencao(intencao) {
-  return (
-    intencao.resposta ||
-    intencao.RESPOSTA ||
-    intencao.mensagem ||
-    intencao.MENSAGEM ||
-    null
-  );
-}
+async function prepararAtendimento() { if ( !estadoAplicacao.uiIniciada
+|| estadoAplicacao.carregandoBase ) { return; }
 
+    estadoAplicacao.carregandoBase =
+        true;
 
-function processarMensagem(mensagem) {
-  const texto = mensagem.trim();
+    estadoAplicacao.aplicacaoPronta =
+        false;
 
-  if (!texto) {
-    return;
-  }
+    mostrarCarregando();
+    esconderErro();
+    bloquearCampo(true);
 
-  adicionarMensagem(texto, "usuario");
+    atualizarStatus(
+        "Carregando informações..."
+    );
 
-  chatCampo.value = "";
+    try {
+        /*
+         * O api.js já devolve a base normalizada.
+         *
+         * Portanto, não use resultado.dados aqui.
+         */
+        const baseConhecimento =
+            await carregarBaseConhecimento();
 
-  const intencao =
-    procurarIntencao(texto);
+        configurarBaseConhecimento(
+            baseConhecimento
+        );
 
-  setTimeout(() => {
-    if (intencao) {
-      const resposta =
-        obterRespostaIntencao(intencao);
+        estadoAplicacao.aplicacaoPronta =
+            true;
 
-      adicionarMensagem(
-        resposta ||
-        "Encontrei essa informação, mas a resposta ainda não foi configurada."
-      );
-    } else {
-      adicionarMensagem(
-        "Ainda não encontrei uma resposta exata para essa pergunta. Tente perguntar sobre horários, ingressos, hospedagem, bangalôs ou quiosques."
-      );
+        esconderCarregando();
+        esconderErro();
+        bloquearCampo(false);
+
+        atualizarStatus(
+            "Online agora"
+        );
+
+        if (chatEstaAberto()) {
+            await garantirConversaIniciada();
+        }
+    } catch (erro) {
+        console.error(
+            "Acqua: falha ao preparar o atendimento.",
+            erro
+        );
+
+        estadoAplicacao.aplicacaoPronta =
+            false;
+
+        esconderCarregando();
+        bloquearCampo(true);
+
+        atualizarStatus(
+            "Atendimento indisponível"
+        );
+
+        mostrarErro(
+            "Não foi possível iniciar o atendimento.",
+            obterMensagemErro(erro),
+            "Tentar novamente",
+            prepararAtendimento
+        );
+    } finally {
+        estadoAplicacao.carregandoBase =
+            false;
     }
-  }, 350);
+
 }
 
+/* ========================================================= REGISTRO DE
+EVENTOS ========================================================= */
 
-/* =========================================================
-   ESTADOS DA INTERFACE
-   ========================================================= */
+function registrarEventos() { if (estadoAplicacao.eventosRegistrados) {
+return; }
 
-function mostrarCarregamento() {
-  chatErro.hidden = true;
-  chatCarregamento.hidden = false;
+    const elementos =
+        obterElementosUI();
 
-  chatCarregamentoTexto.textContent =
-    "Preparando o atendimento...";
+    elementos.formulario?.addEventListener(
+        "submit",
+        enviarMensagemDoFormulario
+    );
 
-  chatStatusTexto.textContent =
-    "Carregando informações...";
+    obterElemento("chatBotaoFlutuante")
+        ?.addEventListener(
+            "click",
+            abrirChat
+        );
 
-  chatCampo.disabled = true;
-  chatEnviar.disabled = true;
+    obterElemento("abrirChatTeste")
+        ?.addEventListener(
+            "click",
+            abrirChat
+        );
 
-  chatCampo.placeholder = "Aguarde...";
+    obterElemento("fecharChat")
+        ?.addEventListener(
+            "click",
+            fecharChat
+        );
+
+    obterElemento("reiniciarChat")
+        ?.addEventListener(
+            "click",
+            reiniciarAtendimento
+        );
+
+    document.addEventListener(
+        "keydown",
+        tratarTeclado
+    );
+
+    estadoAplicacao.eventosRegistrados =
+        true;
+
 }
 
+/* ========================================================= ABRIR CHAT
+========================================================= */
 
-function mostrarAplicacaoPronta() {
-  chatCarregamento.hidden = true;
-  chatErro.hidden = true;
-
-  chatStatusTexto.textContent = "Online";
-
-  chatCampo.disabled = false;
-  chatEnviar.disabled = false;
-
-  chatCampo.placeholder =
-    "Digite sua mensagem";
-
-  mostrarMensagemInicial();
-  criarRespostasRapidas();
+async function abrirChat() { if (!estadoAplicacao.uiIniciada) { return;
 }
 
+    abrirInterfaceChat();
 
-function mostrarErro(erro) {
-  console.error(
-    "Erro ao carregar a base:",
-    erro
-  );
+    estadoAplicacao.chatAberto =
+        true;
 
-  chatCarregamento.hidden = true;
-  chatErro.hidden = false;
-
-  chatStatusTexto.textContent = "Indisponível";
-
-  chatErroTexto.textContent =
-    erro.message ||
-    "Não foi possível carregar as informações.";
-
-  chatCampo.disabled = true;
-  chatEnviar.disabled = true;
-}
-
-
-/* =========================================================
-   CARREGAMENTO DA BASE
-   ========================================================= */
-
-async function iniciarApp() {
-  mostrarCarregamento();
-
-  try {
-    baseConhecimento =
-      await carregarBaseConhecimento();
-
-    console.log(
-      "Base carregada:",
-      baseConhecimento
+    atualizarBotaoFlutuante(
+        true
     );
 
-    console.log(
-      "Intenções:",
-      baseConhecimento.intencoes || []
-    );
+    if (
+        !estadoAplicacao.aplicacaoPronta
+    ) {
+        await prepararAtendimento();
 
-    console.log(
-      "Contatos:",
-      baseConhecimento.contatos || []
-    );
-
-    console.log(
-      "Funcionamento:",
-      baseConhecimento.funcionamento || []
-    );
-
-    mostrarAplicacaoPronta();
-
-  } catch (erro) {
-    mostrarErro(erro);
-  }
-}
-
-
-/* =========================================================
-   EVENTOS
-   ========================================================= */
-
-chatBotaoFlutuante.addEventListener(
-  "click",
-  abrirChat
-);
-
-abrirChatTeste.addEventListener(
-  "click",
-  abrirChat
-);
-
-fecharChat.addEventListener(
-  "click",
-  fecharJanelaChat
-);
-
-reiniciarChat.addEventListener(
-  "click",
-  () => {
-    mostrarMensagemInicial();
-    criarRespostasRapidas();
-  }
-);
-
-tentarNovamente.addEventListener(
-  "click",
-  iniciarApp
-);
-
-chatFormulario.addEventListener(
-  "submit",
-  (evento) => {
-    evento.preventDefault();
-
-    processarMensagem(
-      chatCampo.value
-    );
-  }
-);
-
-document.addEventListener(
-  "keydown",
-  (evento) => {
-    if (evento.key === "Escape") {
-      fecharJanelaChat();
+        return;
     }
-  }
-);
 
+    await garantirConversaIniciada();
 
-/* =========================================================
-   INICIALIZAÇÃO
-   ========================================================= */
+    focarCampo();
 
-iniciarApp();
+}
+
+/* ========================================================= FECHAR CHAT
+========================================================= */
+
+function fecharChat() { if (!estadoAplicacao.uiIniciada) { return; }
+
+    fecharInterfaceChat();
+
+    estadoAplicacao.chatAberto =
+        false;
+
+    atualizarBotaoFlutuante(
+        false
+    );
+
+    devolverFocoAoBotao();
+
+}
+
+/* ========================================================= GARANTIR
+CONVERSA INICIADA
+========================================================= */
+
+async function garantirConversaIniciada() { if (
+!estadoAplicacao.aplicacaoPronta || conversaFoiIniciada() ) { return; }
+
+    await iniciarConversa();
+
+}
+
+/* ========================================================= REINICIAR
+ATENDIMENTO ========================================================= */
+
+async function reiniciarAtendimento() { if (
+estadoAplicacao.carregandoBase ) { return; }
+
+    if (
+        !estadoAplicacao.aplicacaoPronta
+    ) {
+        await prepararAtendimento();
+
+        if (
+            !estadoAplicacao.aplicacaoPronta
+        ) {
+            return;
+        }
+    }
+
+    esconderErro();
+
+    await reiniciarConversa();
+
+}
+
+/* ========================================================= ENVIAR
+MENSAGEM ========================================================= */
+
+async function enviarMensagemDoFormulario( evento ) {
+evento.preventDefault();
+
+    if (
+        !estadoAplicacao.aplicacaoPronta ||
+        estadoAplicacao.carregandoBase
+    ) {
+        return;
+    }
+
+    const mensagem =
+        obterValorCampo();
+
+    if (!mensagem) {
+        focarCampo();
+
+        return;
+    }
+
+    await processarMensagem(
+        mensagem
+    );
+
+}
+
+/* ========================================================= TECLADO E
+ACESSIBILIDADE =========================================================
+*/
+
+function tratarTeclado(evento) { if ( evento.key !== “Escape” ||
+!chatEstaAberto() ) { return; }
+
+    fecharChat();
+
+}
+
+/* ========================================================= CONSULTAR
+ESTADO VISUAL =========================================================
+*/
+
+function chatEstaAberto() { const chat = obterElemento(“chat”);
+
+    if (!chat) {
+        return false;
+    }
+
+    return (
+        chat.getAttribute(
+            "aria-hidden"
+        ) === "false" ||
+        chat.classList.contains(
+            "chat--aberto"
+        ) ||
+        chat.classList.contains(
+            "esta-aberto"
+        ) ||
+        chat.classList.contains(
+            "is-open"
+        )
+    );
+
+}
+
+/* ========================================================= BOTÃO
+FLUTUANTE ========================================================= */
+
+function atualizarBotaoFlutuante( aberto ) { const botao =
+obterElemento( “chatBotaoFlutuante” );
+
+    if (!botao) {
+        return;
+    }
+
+    botao.setAttribute(
+        "aria-expanded",
+        String(Boolean(aberto))
+    );
+
+}
+
+function devolverFocoAoBotao() { const botao = obterElemento(
+“chatBotaoFlutuante” );
+
+    window.setTimeout(
+        () => {
+            botao?.focus();
+        },
+        0
+    );
+
+}
+
+/* ========================================================= STATUS DO
+ATENDIMENTO ========================================================= */
+
+function atualizarStatus(texto) { const status = obterElemento(
+“chatStatusTexto” );
+
+    if (!status) {
+        return;
+    }
+
+    status.textContent =
+        String(texto || "");
+
+}
+
+/* ========================================================= TRATAMENTO
+DE ERROS ========================================================= */
+
+function tratarErroInicializacao( erro ) { console.error( “Acqua: erro
+ao iniciar a aplicação.”, erro );
+
+    estadoAplicacao.aplicacaoPronta =
+        false;
+
+    atualizarStatus(
+        "Atendimento indisponível"
+    );
+
+    /*
+     * Caso a UI tenha iniciado parcialmente,
+     * apresenta o erro dentro do próprio chat.
+     */
+    if (estadoAplicacao.uiIniciada) {
+        esconderCarregando();
+        bloquearCampo(true);
+
+        mostrarErro(
+            "Não foi possível abrir o assistente.",
+            obterMensagemErro(erro),
+            "Tentar novamente",
+            iniciarAplicacao
+        );
+
+        return;
+    }
+
+    /*
+     * Último recurso para falhas estruturais,
+     * como IDs ausentes no HTML.
+     */
+    console.error(
+        obterMensagemErro(erro)
+    );
+
+}
+
+function obterMensagemErro(erro) { const mensagem = String(
+erro?.message || “” ).trim();
+
+    if (mensagem) {
+        return mensagem;
+    }
+
+    return (
+        "Verifique sua conexão e tente novamente."
+    );
+
+}
+
+/* ========================================================= UTILITÁRIOS
+========================================================= */
+
+function obterElemento(id) { return document.getElementById( id ); }
