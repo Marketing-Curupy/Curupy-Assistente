@@ -1,34 +1,69 @@
-/* ========================================================= ACQUA
-ARQUIVO PRINCIPAL
-========================================================= */
+/* =========================================================
+   ACQUA
+   ARQUIVO PRINCIPAL
+   ========================================================= */
 
-import { carregarBaseConhecimento } from “./api.js”;
+import {
+    carregarBaseConhecimento
+} from "./api.js";
 
-import { configurarBaseConhecimento, conversaFoiIniciada,
-iniciarConversa, processarMensagem, reiniciarConversa } from
-“./chat.js”;
+import {
+    configurarBaseConhecimento,
+    conversaFoiIniciada,
+    iniciarConversa,
+    processarMensagem,
+    reiniciarConversa
+} from "./chat.js";
 
-import { abrirInterfaceChat, bloquearCampo, esconderCarregando,
-esconderErro, fecharInterfaceChat, focarCampo, iniciarUI,
-mostrarCarregando, mostrarErro, obterElementosUI, obterValorCampo } from
-“./ui.js”;
+import {
+    abrirInterfaceChat,
+    bloquearCampo,
+    esconderCarregando,
+    esconderErro,
+    fecharInterfaceChat,
+    focarCampo,
+    iniciarUI,
+    mostrarCarregando,
+    mostrarErro,
+    obterElementosUI,
+    obterValorCampo
+} from "./ui.js";
 
-/* ========================================================= ESTADO DA
-APLICAÇÃO ========================================================= */
-
-const estadoAplicacao = { uiIniciada: false, eventosRegistrados: false,
-aplicacaoPronta: false, carregandoBase: false, chatAberto: false };
 
 /* =========================================================
-INICIALIZAÇÃO =========================================================
-*/
+   ESTADO DA APLICAÇÃO
+   ========================================================= */
 
-if (document.readyState === “loading”) { document.addEventListener(
-“DOMContentLoaded”, iniciarAplicacao, { once: true } ); } else {
-iniciarAplicacao(); }
+const estadoAplicacao = {
+    uiIniciada: false,
+    eventosRegistrados: false,
+    aplicacaoPronta: false,
+    carregandoBase: false,
+    chatAberto: false
+};
 
-async function iniciarAplicacao() { try { const interfaceIniciada =
-iniciarUI();
+
+/* =========================================================
+   INICIALIZAÇÃO
+   ========================================================= */
+
+if (document.readyState === "loading") {
+    document.addEventListener(
+        "DOMContentLoaded",
+        iniciarAplicacao,
+        {
+            once: true
+        }
+    );
+} else {
+    iniciarAplicacao();
+}
+
+
+async function iniciarAplicacao() {
+    try {
+        const interfaceIniciada =
+            iniciarUI();
 
         if (!interfaceIniciada) {
             throw new Error(
@@ -55,15 +90,20 @@ iniciarUI();
             erro
         );
     }
-
 }
 
-/* ========================================================= CARREGAR
-BASE DE CONHECIMENTO
-========================================================= */
 
-async function prepararAtendimento() { if ( !estadoAplicacao.uiIniciada
-|| estadoAplicacao.carregandoBase ) { return; }
+/* =========================================================
+   CARREGAR BASE DE CONHECIMENTO
+   ========================================================= */
+
+async function prepararAtendimento() {
+    if (
+        !estadoAplicacao.uiIniciada ||
+        estadoAplicacao.carregandoBase
+    ) {
+        return;
+    }
 
     estadoAplicacao.carregandoBase =
         true;
@@ -80,11 +120,6 @@ async function prepararAtendimento() { if ( !estadoAplicacao.uiIniciada
     );
 
     try {
-        /*
-         * O api.js já devolve a base normalizada.
-         *
-         * Portanto, não use resultado.dados aqui.
-         */
         const baseConhecimento =
             await carregarBaseConhecimento();
 
@@ -132,14 +167,17 @@ async function prepararAtendimento() { if ( !estadoAplicacao.uiIniciada
         estadoAplicacao.carregandoBase =
             false;
     }
-
 }
 
-/* ========================================================= REGISTRO DE
-EVENTOS ========================================================= */
 
-function registrarEventos() { if (estadoAplicacao.eventosRegistrados) {
-return; }
+/* =========================================================
+   REGISTRO DE EVENTOS
+   ========================================================= */
+
+function registrarEventos() {
+    if (estadoAplicacao.eventosRegistrados) {
+        return;
+    }
 
     const elementos =
         obterElementosUI();
@@ -180,14 +218,17 @@ return; }
 
     estadoAplicacao.eventosRegistrados =
         true;
-
 }
 
-/* ========================================================= ABRIR CHAT
-========================================================= */
 
-async function abrirChat() { if (!estadoAplicacao.uiIniciada) { return;
-}
+/* =========================================================
+   ABRIR CHAT
+   ========================================================= */
+
+async function abrirChat() {
+    if (!estadoAplicacao.uiIniciada) {
+        return;
+    }
 
     abrirInterfaceChat();
 
@@ -198,9 +239,7 @@ async function abrirChat() { if (!estadoAplicacao.uiIniciada) { return;
         true
     );
 
-    if (
-        !estadoAplicacao.aplicacaoPronta
-    ) {
+    if (!estadoAplicacao.aplicacaoPronta) {
         await prepararAtendimento();
 
         return;
@@ -209,13 +248,17 @@ async function abrirChat() { if (!estadoAplicacao.uiIniciada) { return;
     await garantirConversaIniciada();
 
     focarCampo();
-
 }
 
-/* ========================================================= FECHAR CHAT
-========================================================= */
 
-function fecharChat() { if (!estadoAplicacao.uiIniciada) { return; }
+/* =========================================================
+   FECHAR CHAT
+   ========================================================= */
+
+function fecharChat() {
+    if (!estadoAplicacao.uiIniciada) {
+        return;
+    }
 
     fecharInterfaceChat();
 
@@ -227,34 +270,38 @@ function fecharChat() { if (!estadoAplicacao.uiIniciada) { return; }
     );
 
     devolverFocoAoBotao();
-
 }
 
-/* ========================================================= GARANTIR
-CONVERSA INICIADA
-========================================================= */
 
-async function garantirConversaIniciada() { if (
-!estadoAplicacao.aplicacaoPronta || conversaFoiIniciada() ) { return; }
+/* =========================================================
+   GARANTIR CONVERSA INICIADA
+   ========================================================= */
+
+async function garantirConversaIniciada() {
+    if (
+        !estadoAplicacao.aplicacaoPronta ||
+        conversaFoiIniciada()
+    ) {
+        return;
+    }
 
     await iniciarConversa();
-
 }
 
-/* ========================================================= REINICIAR
-ATENDIMENTO ========================================================= */
 
-async function reiniciarAtendimento() { if (
-estadoAplicacao.carregandoBase ) { return; }
+/* =========================================================
+   REINICIAR ATENDIMENTO
+   ========================================================= */
 
-    if (
-        !estadoAplicacao.aplicacaoPronta
-    ) {
+async function reiniciarAtendimento() {
+    if (estadoAplicacao.carregandoBase) {
+        return;
+    }
+
+    if (!estadoAplicacao.aplicacaoPronta) {
         await prepararAtendimento();
 
-        if (
-            !estadoAplicacao.aplicacaoPronta
-        ) {
+        if (!estadoAplicacao.aplicacaoPronta) {
             return;
         }
     }
@@ -262,14 +309,17 @@ estadoAplicacao.carregandoBase ) { return; }
     esconderErro();
 
     await reiniciarConversa();
-
 }
 
-/* ========================================================= ENVIAR
-MENSAGEM ========================================================= */
 
-async function enviarMensagemDoFormulario( evento ) {
-evento.preventDefault();
+/* =========================================================
+   ENVIAR MENSAGEM
+   ========================================================= */
+
+async function enviarMensagemDoFormulario(
+    evento
+) {
+    evento.preventDefault();
 
     if (
         !estadoAplicacao.aplicacaoPronta ||
@@ -290,25 +340,32 @@ evento.preventDefault();
     await processarMensagem(
         mensagem
     );
-
 }
 
-/* ========================================================= TECLADO E
-ACESSIBILIDADE =========================================================
-*/
 
-function tratarTeclado(evento) { if ( evento.key !== “Escape” ||
-!chatEstaAberto() ) { return; }
+/* =========================================================
+   TECLADO
+   ========================================================= */
+
+function tratarTeclado(evento) {
+    if (
+        evento.key !== "Escape" ||
+        !chatEstaAberto()
+    ) {
+        return;
+    }
 
     fecharChat();
-
 }
 
-/* ========================================================= CONSULTAR
-ESTADO VISUAL =========================================================
-*/
 
-function chatEstaAberto() { const chat = obterElemento(“chat”);
+/* =========================================================
+   ESTADO VISUAL
+   ========================================================= */
+
+function chatEstaAberto() {
+    const chat =
+        obterElemento("chat");
 
     if (!chat) {
         return false;
@@ -328,14 +385,20 @@ function chatEstaAberto() { const chat = obterElemento(“chat”);
             "is-open"
         )
     );
-
 }
 
-/* ========================================================= BOTÃO
-FLUTUANTE ========================================================= */
 
-function atualizarBotaoFlutuante( aberto ) { const botao =
-obterElemento( “chatBotaoFlutuante” );
+/* =========================================================
+   BOTÃO FLUTUANTE
+   ========================================================= */
+
+function atualizarBotaoFlutuante(
+    aberto
+) {
+    const botao =
+        obterElemento(
+            "chatBotaoFlutuante"
+        );
 
     if (!botao) {
         return;
@@ -345,11 +408,14 @@ obterElemento( “chatBotaoFlutuante” );
         "aria-expanded",
         String(Boolean(aberto))
     );
-
 }
 
-function devolverFocoAoBotao() { const botao = obterElemento(
-“chatBotaoFlutuante” );
+
+function devolverFocoAoBotao() {
+    const botao =
+        obterElemento(
+            "chatBotaoFlutuante"
+        );
 
     window.setTimeout(
         () => {
@@ -357,14 +423,18 @@ function devolverFocoAoBotao() { const botao = obterElemento(
         },
         0
     );
-
 }
 
-/* ========================================================= STATUS DO
-ATENDIMENTO ========================================================= */
 
-function atualizarStatus(texto) { const status = obterElemento(
-“chatStatusTexto” );
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+function atualizarStatus(texto) {
+    const status =
+        obterElemento(
+            "chatStatusTexto"
+        );
 
     if (!status) {
         return;
@@ -372,14 +442,20 @@ function atualizarStatus(texto) { const status = obterElemento(
 
     status.textContent =
         String(texto || "");
-
 }
 
-/* ========================================================= TRATAMENTO
-DE ERROS ========================================================= */
 
-function tratarErroInicializacao( erro ) { console.error( “Acqua: erro
-ao iniciar a aplicação.”, erro );
+/* =========================================================
+   ERROS
+   ========================================================= */
+
+function tratarErroInicializacao(
+    erro
+) {
+    console.error(
+        "Acqua: erro ao iniciar a aplicação.",
+        erro
+    );
 
     estadoAplicacao.aplicacaoPronta =
         false;
@@ -388,10 +464,6 @@ ao iniciar a aplicação.”, erro );
         "Atendimento indisponível"
     );
 
-    /*
-     * Caso a UI tenha iniciado parcialmente,
-     * apresenta o erro dentro do próprio chat.
-     */
     if (estadoAplicacao.uiIniciada) {
         esconderCarregando();
         bloquearCampo(true);
@@ -406,30 +478,30 @@ ao iniciar a aplicação.”, erro );
         return;
     }
 
-    /*
-     * Último recurso para falhas estruturais,
-     * como IDs ausentes no HTML.
-     */
     console.error(
         obterMensagemErro(erro)
     );
-
 }
 
-function obterMensagemErro(erro) { const mensagem = String(
-erro?.message || “” ).trim();
+
+function obterMensagemErro(erro) {
+    const mensagem =
+        String(
+            erro?.message || ""
+        ).trim();
 
     if (mensagem) {
         return mensagem;
     }
 
-    return (
-        "Verifique sua conexão e tente novamente."
-    );
-
+    return "Verifique sua conexão e tente novamente.";
 }
 
-/* ========================================================= UTILITÁRIOS
-========================================================= */
 
-function obterElemento(id) { return document.getElementById( id ); }
+/* =========================================================
+   UTILITÁRIOS
+   ========================================================= */
+
+function obterElemento(id) {
+    return document.getElementById(id);
+}
