@@ -138,6 +138,10 @@ img {
   max-width: 100%;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 
 /* =========================================================
    ACESSIBILIDADE
@@ -457,7 +461,9 @@ body.chat-aberto .chat-botao-flutuante {
   display: grid;
   grid-template-rows:
     auto
+    auto
     minmax(0, 1fr)
+    auto
     auto
     auto
     auto;
@@ -1150,7 +1156,7 @@ body.chat-aberto .chat-botao-flutuante {
    ========================================================= */
 
 .chat__mensagens:empty::before {
-  content: "Abra o atendimento para iniciar uma conversa.";
+  content: "O atendimento será iniciado em instantes.";
 
   min-height: 100%;
 
@@ -1501,5 +1507,149 @@ body.chat-aberto .chat-botao-flutuante {
     animation-iteration-count: 1 !important;
 
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   CARREGAMENTO DA BASE
+   ========================================================= */
+
+.chat__carregamento {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-height: 48px;
+  padding: 11px 14px;
+
+  border-bottom: 1px solid var(--color-gray-200);
+
+  color: var(--color-blue-900);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(232, 250, 255, 0.92),
+      rgba(255, 255, 255, 0.98)
+    );
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chat__carregamento-icone {
+  width: 18px;
+  height: 18px;
+
+  flex: 0 0 18px;
+
+  border: 3px solid rgba(8, 127, 175, 0.18);
+  border-top-color: var(--color-blue-700);
+  border-radius: 50%;
+
+  animation: carregando 700ms linear infinite;
+}
+
+.chat__carregamento.esta-oculto {
+  display: none;
+}
+
+
+/* =========================================================
+   ERRO DE CARREGAMENTO
+   ========================================================= */
+
+.chat__erro {
+  display: grid;
+  gap: 7px;
+
+  margin: 0 13px 10px;
+  padding: 13px;
+
+  border: 1px solid rgba(220, 57, 95, 0.18);
+  border-radius: 14px;
+
+  color: var(--color-gray-900);
+  background: #fff0f4;
+
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.chat__erro strong {
+  color: #dc395f;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.chat__erro span {
+  color: var(--color-gray-700);
+}
+
+.chat__erro button {
+  width: fit-content;
+  min-height: 36px;
+
+  margin-top: 3px;
+  padding: 8px 12px;
+
+  border: 0;
+  border-radius: 10px;
+
+  color: var(--color-white);
+  background: #dc395f;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  transition:
+    transform var(--transition-fast),
+    filter var(--transition-fast);
+}
+
+.chat__erro button:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+
+/* =========================================================
+   AVISO SEM JAVASCRIPT
+   ========================================================= */
+
+.aviso-sem-script {
+  position: fixed;
+
+  left: 50%;
+  bottom: 20px;
+
+  z-index: 10000;
+
+  width: min(520px, calc(100vw - 32px));
+
+  padding: 14px 18px;
+
+  border: 1px solid rgba(220, 57, 95, 0.20);
+  border-radius: 14px;
+
+  color: var(--color-gray-900);
+  background: #fff0f4;
+
+  box-shadow: var(--shadow-medium);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  line-height: 1.5;
+  text-align: center;
+
+  transform: translateX(-50%);
+}
+
+@keyframes carregando {
+  to {
+    transform: rotate(360deg);
   }
 }
