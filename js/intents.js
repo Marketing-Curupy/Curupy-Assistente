@@ -805,39 +805,30 @@ function prepararIntencao(
    ========================================================= */
 
 function prepararSugestoes(item) {
+    const sugestoesRecebidas =
+        item.sugestoesRapidas ??
+        item.sugestoes ??
+        item.sugestoes_rapidas ??
+        item.botoes ??
+        item.respostas_rapidas ??
+        "";
+
     if (
         Array.isArray(
-            item.sugestoes
+            sugestoesRecebidas
         )
     ) {
-        return item.sugestoes
+        return sugestoesRecebidas
             .map(normalizarSugestao)
             .filter(Boolean);
     }
 
     const campo =
-        item.sugestoes ||
-        item.botoes ||
-        item.respostas_rapidas ||
-        "";
+        sugestoesRecebidas;
 
     if (!campo) {
         return [];
     }
-
-    /*
-      Formatos aceitos:
-
-      Criança paga?|Criança paga?
-      Comprar ingresso|https://curupy.com.br
-
-      Separadores entre sugestões:
-      - quebra de linha
-      - ponto e vírgula
-
-      Separador entre texto e destino:
-      TEXTO|MENSAGEM OU LINK
-    */
 
     return String(campo)
         .split(/\r?\n|;/)
@@ -870,22 +861,17 @@ function prepararSugestoes(item) {
             if (ehLink(destino)) {
                 return {
                     texto,
-
-                    link:
-                        destino
+                    link: destino
                 };
             }
 
             return {
                 texto,
-
-                mensagem:
-                    destino
+                mensagem: destino
             };
         })
         .filter(Boolean);
 }
-
 
 /* =========================================================
    NORMALIZAR SUGESTÃO
