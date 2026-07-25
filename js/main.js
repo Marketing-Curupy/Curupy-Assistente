@@ -7,26 +7,23 @@ import {
   carregarBaseConhecimento
 } from "./api.js";
 
-import {
-  configurarBaseConhecimento,
-  conversaFoiIniciada,
-  iniciarConversa,
-  processarMensagem,
-  reiniciarConversa
-} from "./chat.js";
+async function iniciarApp() {
+  try {
+    const base = await carregarBaseConhecimento();
 
-import {
-  abrirInterfaceChat,
-  bloquearCampo,
-  esconderCarregando,
-  esconderErro,
-  fecharInterfaceChat,
-  iniciarUI,
-  mostrarCarregando,
-  mostrarErro,
-  obterElementosUI,
-  obterValorCampo
-} from "./ui.js";
+    console.log("Base carregada:", base);
+
+    // Exemplos
+    console.log("Intenções:", base.intencoes);
+    console.log("Contatos:", base.contatos);
+    console.log("Funcionamento:", base.funcionamento);
+
+  } catch (erro) {
+    console.error("Erro ao carregar a planilha:", erro);
+  }
+}
+
+iniciarApp();
 
 
 /* =========================================================
