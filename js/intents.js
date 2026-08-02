@@ -197,7 +197,7 @@ const GRUPOS_INTENCAO = {
         "kids",
         "infantil",
         "idade",
-        "quantos anos"
+        "quantos anos",
    "aninho",
 "aninhos",
 "anos",
