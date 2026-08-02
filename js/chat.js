@@ -20,7 +20,6 @@ import {
 import {
     adicionarMensagemAssistente,
     adicionarMensagemUsuario,
-    atualizarSugestoes,
     bloquearCampo,
     limparCampo,
     limparMensagens,
@@ -269,8 +268,10 @@ async function processarNome(mensagem) {
         obterVariaveis()
     );
 
-    registrarMensagemAssistente(mensagemBoasVindas);
-    mostrarMenuInicial();
+    registrarMensagemAssistente(
+        mensagemBoasVindas,
+        prepararMenuPlanilha()
+    );
 }
 
 /* =========================================================
@@ -291,16 +292,17 @@ function aplicarRetornoFluxo(retorno) {
         obterVariaveis()
     );
 
+    const sugestoes =
+        prepararSugestoesComVariaveis(
+            retorno?.sugestoes || []
+        );
+
     if (limparTexto(mensagem)) {
-        registrarMensagemAssistente(mensagem);
+        registrarMensagemAssistente(
+            mensagem,
+            sugestoes
+        );
     }
-
-    const sugestoes = prepararSugestoesComVariaveis(retorno?.sugestoes || []);
-
-    atualizarSugestoes(
-        sugestoes,
-        processarMensagem
-    );
 }
 
 /* =========================================================
@@ -311,26 +313,41 @@ function apresentarMenuInicial() {
     const mensagem = substituirVariaveis(
         obterMensagemFluxo(
             "APRESENTACAO",
-            "Olá! 👋\nSou o Acqua, assistente virtual do Curupy.\n\nComo posso ajudar você hoje?"
+            [
+                "Olá! 👋",
+                "Sou o Acqua, assistente virtual do Curupy.",
+                "",
+                "Como posso ajudar você hoje?"
+            ].join("\n")
         ),
         obterVariaveis()
     );
 
-    registrarMensagemAssistente(mensagem);
-    mostrarMenuInicial();
-}
-
-function mostrarMenuInicial() {
-    atualizarSugestoes(
-        prepararMenuPlanilha(),
-        processarMensagem
+    registrarMensagemAssistente(
+        mensagem,
+        prepararMenuPlanilha()
     );
 }
 
+
+function mostrarMenuInicial(
+    mensagem = "Escolha uma das opções abaixo 😊"
+) {
+    registrarMensagemAssistente(
+        mensagem,
+        prepararMenuPlanilha()
+    );
+}
+
+
 function prepararMenuPlanilha() {
-    const itemMenu = estado.base.fluxoInicial.find(item => {
-        return normalizarIdentificador(item?.id) === "menu_principal";
-    });
+    const itemMenu =
+        estado.base.fluxoInicial.find(item => {
+            return (
+                normalizarIdentificador(item?.id) ===
+                "menu_principal"
+            );
+        });
 
     const mensagemAcao = limparTexto(
         itemMenu?.mensagem_acao ||
@@ -339,7 +356,10 @@ function prepararMenuPlanilha() {
     );
 
     const opcoes = mensagemAcao
-        .replace(/^\s*exibir\s+os\s+bot[oõ]es\s*:\s*/i, "")
+        .replace(
+            /^\s*exibir\s+os\s+bot[oõ]es\s*:\s*/i,
+            ""
+        )
         .split("|")
         .map(limparTexto)
         .filter(Boolean);
@@ -359,6 +379,7 @@ function prepararMenuPlanilha() {
    ========================================================= */
 
 function responderConhecimentoLegado(resultado) {
+
     atualizarContexto({
         assunto: resultado?.assunto || "",
         categoria: resultado?.categoria || "",
@@ -375,19 +396,23 @@ function responderConhecimentoLegado(resultado) {
         return;
     }
 
-    registrarMensagemAssistente(resposta);
+    const sugestoes =
+        prepararSugestoesComVariaveis(
+            resultado?.sugestoes || []
+        );
 
-    const sugestoes = prepararSugestoesComVariaveis(resultado?.sugestoes || []);
-
-    if (sugestoes.length > 0) {
-        atualizarSugestoes(sugestoes, processarMensagem);
-        return;
-    }
-
-    atualizarSugestoes(
-        [{ texto: "🏠 Menu principal", mensagem: "Menu principal" }],
-        processarMensagem
+    registrarMensagemAssistente(
+        resposta,
+        sugestoes.length
+            ? sugestoes
+            : [
+                {
+                    texto: "🏠 Menu principal",
+                    mensagem: "Menu principal"
+                }
+            ]
     );
+
 }
 
 /* =========================================================
@@ -395,6 +420,7 @@ function responderConhecimentoLegado(resultado) {
    ========================================================= */
 
 function responderFallback(mensagemOriginal) {
+
     const mensagem = substituirVariaveis(
         obterConfiguracao(
             "mensagem_fallback",
@@ -404,10 +430,13 @@ function responderFallback(mensagemOriginal) {
         obterVariaveis()
     );
 
-    registrarMensagemAssistente(mensagem);
+    const sugestoes =
+        obterMenuPrincipal();
 
-    const sugestoes = obterMenuPrincipal();
-    const whatsapp = obterLinkWhatsAppFallback(mensagemOriginal);
+    const whatsapp =
+        obterLinkWhatsAppFallback(
+            mensagemOriginal
+        );
 
     if (whatsapp) {
         sugestoes.push({
@@ -416,9 +445,11 @@ function responderFallback(mensagemOriginal) {
         });
     }
 
-    atualizarSugestoes(sugestoes, processarMensagem);
+    registrarMensagemAssistente(
+        mensagem,
+        sugestoes
+    );
 }
-
 /* =========================================================
    HISTÓRICO
    ========================================================= */
@@ -428,9 +459,22 @@ function registrarMensagemUsuario(mensagem) {
     adicionarAoHistorico("usuario", mensagem);
 }
 
-function registrarMensagemAssistente(mensagem) {
-    adicionarMensagemAssistente(mensagem);
-    adicionarAoHistorico("assistente", mensagem);
+function registrarMensagemAssistente(
+    mensagem,
+    sugestoes = []
+) {
+
+    adicionarMensagemAssistente(
+        mensagem,
+        sugestoes,
+        processarMensagem
+    );
+
+    adicionarAoHistorico(
+        "assistente",
+        mensagem
+    );
+
 }
 
 function adicionarAoHistorico(remetente, mensagem) {
