@@ -83,6 +83,15 @@ const GRUPOS_INTENCAO = {
         "garantir ingresso",
         "comprar ingresso",
         "ingresso online"
+       "quero ir",
+"vou visitar",
+"pretendo visitar",
+"quero conhecer",
+"quero passar o dia",
+"vou amanhã",
+"vou hoje",
+"vou domingo",
+"vou sábado",
     ],
 
     horario: [
@@ -189,6 +198,16 @@ const GRUPOS_INTENCAO = {
         "infantil",
         "idade",
         "quantos anos"
+   "aninho",
+"aninhos",
+"anos",
+"idade",
+"meu filho",
+"minha filha",
+"meu menino",
+"minha menina",
+"bebê",
+"bebe"
     ],
 
     idoso: [
@@ -206,6 +225,14 @@ const GRUPOS_INTENCAO = {
         "pode levar",
         "nao pode",
         "orientacao"
+       "pet",
+"cachorro",
+"gato",
+"animal",
+"vape",
+"cigarro eletrônico",
+"eletrônico",
+"fumar",
     ],
 
     alimentacao: [
@@ -216,6 +243,14 @@ const GRUPOS_INTENCAO = {
         "restaurante",
         "lanche",
         "levar comida"
+       "cerveja",
+"refrigerante",
+"água",
+"agua",
+"tereré",
+"chimarrão",
+"cooler",
+"isopor",
     ],
 
     estacionamento: [
@@ -830,8 +865,7 @@ function prepararSugestoes(item) {
         return [];
     }
 
-    return String(campo)
-        .split(/\r?\n|;/)
+   return obterListaDoCampo(campo)
         .map(valor => {
             return valor.trim();
         })
