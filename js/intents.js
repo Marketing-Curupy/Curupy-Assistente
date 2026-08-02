@@ -224,7 +224,7 @@ const GRUPOS_INTENCAO = {
         "proibido",
         "pode levar",
         "nao pode",
-        "orientacao"
+        "orientacao",
        "pet",
 "cachorro",
 "gato",
