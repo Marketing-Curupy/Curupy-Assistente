@@ -582,14 +582,8 @@ function criarBotaoDaMensagem(
     }
     );
 
-    return botao;
+return botao;
 }
-
-function bloquearBotoesDoGrupo(
-    grupo,
-    bloquear
-) {
-
 
 function bloquearBotoesDoGrupo(
     grupo,
