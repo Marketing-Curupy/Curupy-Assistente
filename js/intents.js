@@ -82,7 +82,7 @@ const GRUPOS_INTENCAO = {
         "adquirir",
         "garantir ingresso",
         "comprar ingresso",
-        "ingresso online"
+        "ingresso online",
        "quero ir",
 "vou visitar",
 "pretendo visitar",
