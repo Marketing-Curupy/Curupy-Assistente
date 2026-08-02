@@ -535,59 +535,54 @@ function criarBotaoDaMensagem(
         );
     }
 
-    botao.addEventListener(
-        "click",
-        async () => {
-            if (botao.disabled) {
-                return;
-            }
+  botao.addEventListener(
+    "click",
+    async () => {
 
-            if (sugestao?.link) {
-                abrirLinkSeguro(
-                    sugestao.link
-                );
-
-                return;
-            }
-
-            const mensagemSelecionada =
-                limparTexto(
-                    sugestao?.mensagem
-                ) || texto;
-
-            if (
-                typeof aoSelecionar !==
-                "function"
-            ) {
-                return;
-            }
-
-            bloquearBotoesDoGrupo(
-                grupo,
-                true
-            );
-
-            try {
-                await aoSelecionar(
-                    mensagemSelecionada,
-                    sugestao
-                );
-            } catch (erro) {
-                console.error(
-                    "Acqua: erro ao processar sugestão.",
-                    erro
-                );
-            } finally {
-                bloquearBotoesDoGrupo(
-                    grupo,
-                    false
-                );
-            }
+        if (botao.disabled) {
+            return;
         }
-    );
 
-    return botao;
-}
+        if (sugestao?.link) {
+            abrirLinkSeguro(
+                sugestao.link
+            );
+            return;
+        }
+
+        const mensagemSelecionada =
+            limparTexto(
+                sugestao?.mensagem
+            ) || texto;
+
+        if (
+            typeof aoSelecionar !==
+            "function"
+        ) {
+            return;
+        }
+
+        bloquearBotoesDoGrupo(
+            grupo,
+            true
+        );
+
+        try {
+            await aoSelecionar(
+                mensagemSelecionada,
+                sugestao
+            );
+        } catch (erro) {
+            console.error(
+                "Acqua: erro ao processar sugestão.",
+                erro
+            );
+        }
+
+    }
+);
+
+return botao;
 
 
 function bloquearBotoesDoGrupo(
@@ -766,6 +761,17 @@ export function focarCampo() {
 /* =========================================================
    LIMPEZA
    ========================================================= */
+
+export function limparMensagens() {
+    if (!elementos.mensagens) {
+        return;
+    }
+
+    removerDigitando();
+
+    elementos.mensagens.innerHTML = "";
+}
+
 
 export function limparSugestoes() {
     /*
