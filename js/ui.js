@@ -103,9 +103,6 @@ function validarElementos() {
         mensagens:
             elementos.mensagens,
 
-        respostas:
-            elementos.respostas,
-
         formulario:
             elementos.formulario,
 
@@ -134,7 +131,6 @@ function validarElementos() {
 
     return true;
 }
-
 
 /* =========================================================
    ACESSIBILIDADE
@@ -331,11 +327,15 @@ export function esconderErro() {
    ========================================================= */
 
 export function adicionarMensagemAssistente(
-    texto
+    texto,
+    sugestoes = [],
+    aoSelecionar = null
 ) {
     return adicionarMensagem(
         texto,
-        "assistente"
+        "assistente",
+        sugestoes,
+        aoSelecionar
     );
 }
 
@@ -352,7 +352,9 @@ export function adicionarMensagemUsuario(
 
 function adicionarMensagem(
     texto,
-    tipo
+    tipo,
+    sugestoes = [],
+    aoSelecionar = null
 ) {
     if (!elementos.mensagens) {
         return null;
@@ -400,6 +402,33 @@ function adicionarMensagem(
         mensagem
     );
 
+    balao.appendChild(
+        conteudo
+    );
+
+    /*
+     * Os botões são incluídos dentro do balão do Acqua.
+     * Isso faz com que categorias, datas e opções do menu
+     * rolem junto com o restante da conversa.
+     */
+    if (
+        tipo === "assistente" &&
+        Array.isArray(sugestoes) &&
+        sugestoes.length > 0
+    ) {
+        const grupoSugestoes =
+            criarSugestoesDaMensagem(
+                sugestoes,
+                aoSelecionar
+            );
+
+        if (grupoSugestoes) {
+            balao.appendChild(
+                grupoSugestoes
+            );
+        }
+    }
+
     const horario =
         document.createElement(
             "span"
@@ -410,10 +439,6 @@ function adicionarMensagem(
 
     horario.textContent =
         horaAtual();
-
-    balao.appendChild(
-        conteudo
-    );
 
     balao.appendChild(
         horario
@@ -432,6 +457,154 @@ function adicionarMensagem(
     return linha;
 }
 
+
+/* =========================================================
+   SUGESTÕES DENTRO DA MENSAGEM
+   ========================================================= */
+
+function criarSugestoesDaMensagem(
+    sugestoes,
+    aoSelecionar
+) {
+    const grupo =
+        document.createElement(
+            "div"
+        );
+
+    grupo.className =
+        "mensagem__sugestoes";
+
+    grupo.setAttribute(
+        "aria-label",
+        "Opções disponíveis"
+    );
+
+    sugestoes.forEach(sugestao => {
+        const botao =
+            criarBotaoDaMensagem(
+                sugestao,
+                aoSelecionar,
+                grupo
+            );
+
+        if (botao) {
+            grupo.appendChild(
+                botao
+            );
+        }
+    });
+
+    return grupo.children.length > 0
+        ? grupo
+        : null;
+}
+
+
+function criarBotaoDaMensagem(
+    sugestao,
+    aoSelecionar,
+    grupo
+) {
+    const texto =
+        limparTexto(
+            sugestao?.texto
+        );
+
+    if (!texto) {
+        return null;
+    }
+
+    const botao =
+        document.createElement(
+            "button"
+        );
+
+    botao.type =
+        "button";
+
+    botao.className =
+        "chat__resposta-rapida mensagem__sugestao";
+
+    botao.textContent =
+        texto;
+
+    if (sugestao?.link) {
+        botao.setAttribute(
+            "aria-label",
+            `${texto}. Abre em uma nova guia.`
+        );
+    }
+
+    botao.addEventListener(
+        "click",
+        async () => {
+            if (botao.disabled) {
+                return;
+            }
+
+            if (sugestao?.link) {
+                abrirLinkSeguro(
+                    sugestao.link
+                );
+
+                return;
+            }
+
+            const mensagemSelecionada =
+                limparTexto(
+                    sugestao?.mensagem
+                ) || texto;
+
+            if (
+                typeof aoSelecionar !==
+                "function"
+            ) {
+                return;
+            }
+
+            bloquearBotoesDoGrupo(
+                grupo,
+                true
+            );
+
+            try {
+                await aoSelecionar(
+                    mensagemSelecionada,
+                    sugestao
+                );
+            } catch (erro) {
+                console.error(
+                    "Acqua: erro ao processar sugestão.",
+                    erro
+                );
+            } finally {
+                bloquearBotoesDoGrupo(
+                    grupo,
+                    false
+                );
+            }
+        }
+    );
+
+    return botao;
+}
+
+
+function bloquearBotoesDoGrupo(
+    grupo,
+    bloquear
+) {
+    if (!grupo) {
+        return;
+    }
+
+    grupo
+        .querySelectorAll("button")
+        .forEach(botao => {
+            botao.disabled =
+                Boolean(bloquear);
+        });
+}
 
 /* =========================================================
    INDICADOR DE DIGITAÇÃO
@@ -512,146 +685,6 @@ export function removerDigitando() {
     digitandoAtual =
         null;
 }
-
-
-/* =========================================================
-   RESPOSTAS RÁPIDAS
-   ========================================================= */
-
-export function atualizarSugestoes(
-    sugestoes = [],
-    aoSelecionar = null
-) {
-    limparSugestoes();
-
-    if (
-        !elementos.respostas ||
-        !Array.isArray(sugestoes)
-    ) {
-        return;
-    }
-
-    sugestoes.forEach(
-        sugestao => {
-            criarBotaoSugestao(
-                sugestao,
-                aoSelecionar
-            );
-        }
-    );
-
-    rolarFinal();
-}
-
-
-function criarBotaoSugestao(
-    sugestao,
-    aoSelecionar
-) {
-    const texto =
-        limparTexto(
-            sugestao?.texto
-        );
-
-    if (!texto) {
-        return;
-    }
-
-    const botao =
-        document.createElement(
-            "button"
-        );
-
-    botao.type =
-        "button";
-
-    botao.className =
-        "chat__resposta-rapida";
-
-    botao.textContent =
-        texto;
-
-    if (sugestao?.link) {
-        botao.setAttribute(
-            "aria-label",
-            `${texto}. Abre em uma nova guia.`
-        );
-    }
-
-    botao.addEventListener(
-        "click",
-        async () => {
-            if (botao.disabled) {
-                return;
-            }
-
-            if (sugestao?.link) {
-                abrirLinkSeguro(
-                    sugestao.link
-                );
-
-                return;
-            }
-
-            const mensagem =
-                limparTexto(
-                    sugestao?.mensagem
-                ) || texto;
-
-            if (
-                typeof aoSelecionar !==
-                "function"
-            ) {
-                return;
-            }
-
-            bloquearSugestoes(
-                true
-            );
-
-            try {
-                await aoSelecionar(
-                    mensagem,
-                    sugestao
-                );
-            } catch (erro) {
-                console.error(
-                    "Acqua: erro ao processar sugestão.",
-                    erro
-                );
-            } finally {
-                bloquearSugestoes(
-                    false
-                );
-            }
-        }
-    );
-
-    elementos.respostas.appendChild(
-        botao
-    );
-}
-
-
-function bloquearSugestoes(
-    bloquear
-) {
-    if (!elementos.respostas) {
-        return;
-    }
-
-    const botoes =
-        elementos.respostas
-            .querySelectorAll(
-                "button"
-            );
-
-    botoes.forEach(botao => {
-        botao.disabled =
-            Boolean(bloquear);
-    });
-}
-
 
 /* =========================================================
    FORMULÁRIO
@@ -734,25 +767,38 @@ export function focarCampo() {
    LIMPEZA
    ========================================================= */
 
-export function limparMensagens() {
-    if (!elementos.mensagens) {
-        return;
-    }
-
-    removerDigitando();
-
-    elementos.mensagens.innerHTML =
-        "";
-}
-
-
 export function limparSugestoes() {
-    if (!elementos.respostas) {
-        return;
+    /*
+     * Limpa o container antigo de respostas rápidas,
+     * caso ele ainda exista no HTML.
+     */
+    if (elementos.respostas) {
+        elementos.respostas.innerHTML = "";
     }
 
-    elementos.respostas.innerHTML =
-        "";
+    /*
+     * Desativa os botões das mensagens anteriores.
+     * Assim as opções continuam visíveis no histórico,
+     * mas não podem ser clicadas novamente.
+     */
+    if (elementos.mensagens) {
+        elementos.mensagens
+            .querySelectorAll(
+                ".mensagem__sugestoes:not([data-finalizada='true'])"
+            )
+            .forEach(grupo => {
+                grupo.setAttribute(
+                    "data-finalizada",
+                    "true"
+                );
+
+                grupo
+                    .querySelectorAll("button")
+                    .forEach(botao => {
+                        botao.disabled = true;
+                    });
+            });
+    }
 }
 
 
