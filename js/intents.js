@@ -242,7 +242,7 @@ const GRUPOS_INTENCAO = {
         "bebida",
         "restaurante",
         "lanche",
-        "levar comida"
+        "levar comida",
        "cerveja",
 "refrigerante",
 "água",
